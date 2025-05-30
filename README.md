@@ -38,12 +38,22 @@ Our stack is a total solution for a mobile platform to navigate in 3D environmen
   </tr>
 </table>
 
-## Robot platform
-We have been intensively testing our navigation stack on the development platform and different outdoor areas. We also keep in mind that a cost-effective solution is our objective.
-Our platform is composed of:
-
-- A lidar with 16 lines (Leishen C16)
-- intel NUC i7 with 8 GB memory (Now we are testing on Nvidia Jetson Orin Nano)
-- MPU 9250 IMU
-- Intel Realsense D435
-- AgileX Scout Mini - we have retrofitted Scout Mini Odometry with [3D odometry](https://github.com/dfl-rlab/dddmr_hardware)
+## Tutorial of DDD navigation functions
+<details><summary> <b>Mapping</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam
+</details>
+<details><summary> <b>Localization</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_mcl_3dl
+</details>
+<details><summary> <b>Perception</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_perception_3d
+</details>
+<details><summary> <b>Global planner</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_global_planner
+</details>
+<details><summary> <b>Local planner</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_local_planner
+</details>
+<details><summary> <b>Move base</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_p2p_move_base
+</details>
