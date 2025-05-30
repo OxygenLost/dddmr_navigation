@@ -6,5 +6,5 @@ We have docker files that can generate:
 
 The docker images are built with:
 - ROS2 humble
-- pcl-1.14.1
+- pcl-1.15
 - gtsam 4.2a9
