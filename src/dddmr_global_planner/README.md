@@ -1,7 +1,7 @@
 # dddmr_global_planner
 DDDMR Global Planner is graph-based A* algorithm to find the shortest path in the point cloud, in our case the ground. The global planner takes in static graph (ground) and dynamic graph (sensors) to plan the path.
 
-The [dddmr_perception_3d](https://github.com/dfl-rlab/dddmr_perception_3d) is used in this global planner allowing ddd_navigation to find the path avoiding obstacles.
+The dddmr_perception_3d is used in this global planner allowing ddd_navigation to find the path avoiding obstacles.
 
 <table>
   <tr width="100%">
