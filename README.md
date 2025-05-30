@@ -33,8 +33,8 @@ Our stack is a total solution for a mobile platform to navigate in 3D environmen
     <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_navigation/navigation.gif" width="400" height="260"/><p align='center'>3D navigation</p></td>
   </tr>
   <tr width="100%">
-    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_navigation/annoying_test.gif" width="400" height="260"/><p align='center'>Obstacle avoidance (annoying test)</p></td>
-    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_navigation/multilayer_lidar_demo.gif" width="400" height="260"/><p align='center'>Auto docking</p></td>
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/perception_3d/scanning_lidar_demo.gif" width="400" height="260"/><p align='center'>Support vairant sensors (Unitree G4)</p></td>
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/perception_3d/multi_depth_camera_demo.gif" width="400" height="260"/><p align='center'>Support vairant sensors (Depth Camera)</p></td>
   </tr>
 </table>
 
