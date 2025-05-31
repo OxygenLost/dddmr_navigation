@@ -1,7 +1,7 @@
 # mcl_3dl
 
 > [!CAUTION]
-> This package should be used with [dddmr_lego_loam_bor ](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam), because it loads pose graph generated using [dddmr_lego_loam_bor ](https://github.com/dfl-rlab/dddmr_lego_loam_bor) to localize instead of using a point cloud file. Therefore, our algorithm can run in a huge map without computation overhead.
+> This package should be used with [dddmr_lego_loam_bor ](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam), because it loads pose graph generated using [dddmr_lego_loam_bor ](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam) to localize instead of using a point cloud file. Therefore, our algorithm can run in a huge map without computation overhead.
 
 This repo is based on the [mcl_3dl ](https://github.com/at-wat/mcl_3dl), and has been modified for ground vehicles. We did not fork the repo due to significant modifications, variant features and frameworks are implemented.
 
