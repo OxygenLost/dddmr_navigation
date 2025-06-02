@@ -7,7 +7,7 @@
 > cd dddmr_navigation && git submodule init && git submodule update 
 > ```
 DDDMR navigation (3D Mobile Robot Navigation) is a navigation stack allows users to map, localize and autonomously navigate in 3D environments. 
-<details><summary> <b>Detail</b> </summary>
+<details><summary> <b>Click me to see detail</b> </summary>
 Below figure shows the comparison between 2D navigation stack and DDD(3D) navigation.
 Our stack is a total solution for a mobile platform to navigate in 3D environments. There are plenty advantages for choosing DDD navigation:
   
@@ -21,6 +21,27 @@ Our stack is a total solution for a mobile platform to navigate in 3D environmen
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_navigation/navigation_diagram.png" width="780" height="560"/>
 </p>
+
+
+## Detail documentations for each package
+<details><summary> <b>Click me to see Mapping</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam
+</details>
+<details><summary> <b>Click me to see Localization</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_mcl_3dl
+</details>
+<details><summary> <b>Click me to see Perception</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_perception_3d
+</details>
+<details><summary> <b>Click me to see Global planner</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_global_planner
+</details>
+<details><summary> <b>Click me to see Local planner</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_local_planner
+</details>
+<details><summary> <b>Click me to see Move base</b> </summary>
+https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_p2p_move_base
+</details>
 
 ## Demonstrations of DDD navigation functions
 <table align='center'>
@@ -38,22 +59,3 @@ Our stack is a total solution for a mobile platform to navigate in 3D environmen
   </tr>
 </table>
 
-## Tutorial of DDD navigation functions
-<details><summary> <b>Mapping</b> </summary>
-https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam
-</details>
-<details><summary> <b>Localization</b> </summary>
-https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_mcl_3dl
-</details>
-<details><summary> <b>Perception</b> </summary>
-https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_perception_3d
-</details>
-<details><summary> <b>Global planner</b> </summary>
-https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_global_planner
-</details>
-<details><summary> <b>Local planner</b> </summary>
-https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_local_planner
-</details>
-<details><summary> <b>Move base</b> </summary>
-https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_p2p_move_base
-</details>
