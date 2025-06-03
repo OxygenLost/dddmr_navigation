@@ -30,10 +30,10 @@ echo -n "Do you want to download multilayer lidar (unitree g4) bag files (25MB)?
 read u_bag
 if [ "$u_bag" != "${u_bag#[Yy]}" ] ;then 
   echo "Download bag"
-  cd ~/dddmr_bags && curl -L -c cookies.txt 'https://drive.usercontent.google.com/uc?export=download&id='1QVMqS-rCi5Q96LgwVDxc-jD5VhVjwohn- \
+  cd ~/dddmr_bags && curl -L -c cookies.txt 'https://drive.usercontent.google.com/uc?export=download&id='1QVMqS-rCi5Q96LgwVDxc-jD5VhVjwohn \
       | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1/p' > confirm.txt
   curl -L -b cookies.txt -o unitree_lidar_point_cloud.zip \
-      'https://drive.usercontent.google.com/download?id='1QVMqS-rCi5Q96LgwVDxc-jD5VhVjwohn-'&confirm='$(<confirm.txt)
+      'https://drive.usercontent.google.com/download?id='1QVMqS-rCi5Q96LgwVDxc-jD5VhVjwohn'&confirm='$(<confirm.txt)
   rm -f confirm.txt cookies.txt
   unzip unitree_lidar_point_cloud.zip
 fi
