@@ -41,16 +41,17 @@ RUN apt-get install -y iputils-ping net-tools htop build-essential
 RUN apt install -y zip
 RUN apt install -y libmetis-dev
 RUN cd /tmp && git clone https://github.com/borglab/gtsam.git && cd gtsam && git checkout 4.2a9
-RUN cd /tmp/gtsam && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DGTSAM_USE_SYSTEM_EIGEN=ON -DGTSAM_USE_SYSTEM_METIS=ON .. && make install -j$(($(nproc) - 2))
+RUN cd /tmp/gtsam && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DGTSAM_USE_SYSTEM_EIGEN=ON -DGTSAM_USE_SYSTEM_METIS=ON -DPCL_ENABLE_MARCHNATIVE=OFF .. && make install -j$(nproc)
 # --- end of gtsam
 
 
 # --- PCL --- 
 RUN apt install -y libpcap-dev
 RUN apt install -y libusb-1.0-0-dev
-RUN cd /tmp && git clone https://github.com/PointCloudLibrary/pcl.git && cd pcl && git checkout pcl-1.14.1
-RUN cd /tmp/pcl && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr .. && make install -j$(($(nproc) - 2))
+RUN cd /tmp && git clone https://github.com/PointCloudLibrary/pcl.git && cd pcl && git checkout pcl-1.15.0
+RUN cd /tmp/pcl && mkdir build && cd build && cmake -DPCL_ENABLE_AVX=OFF -DPCL_ENABLE_SSE=OFF -DPCL_ENABLE_MARCHNATIVE=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr .. && make install -j$(nproc)
 # --- end of PCL
+
 
 # --- Serial lib ---
 COPY ./pkgs/serial-foxy.zip /tmp

@@ -18,6 +18,6 @@ if [[ $image_type == "x64" ]]; then
     fi
 else
     echo "----> Creating l4t image"
-    docker build -t dddmr:l4t_r36 -f Dockerfile_l4t_r36 . --no-cache
+    docker build -t dddmr:l4t_r36 -f Dockerfile_x64_l4t_r36 . --no-cache
 fi
 
