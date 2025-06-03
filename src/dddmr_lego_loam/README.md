@@ -22,21 +22,25 @@ The following features are provided and are different from original version:
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/legoloam_weiwuyin.png" width="700" height="320"/>
 </p>
 
-Watch more videos on Youtube of 3D navigation stack -> [DDDMobilerobot channel](https://www.youtube.com/@dddmobilerobot9169).
-
 ## RUN The Demo
 ### 1. Create docker image
-The package runs in the docker, so we need to build the image first. We support both x64 (tested in intel NUC) and arm64 (tested in nvidia jetson jpack6).
+> [!NOTE]
+> The package runs in the docker, so we need to build the image first. We support both x64 with or without GPU and arm64 (tested in nvidia jetson jpack6.2).
+> 
+> Follow the instruction to build either x64 or l4t docker images. It will take some time depending on your harware
+
+
 ```
 cd ~
 git clone https://github.com/dfl-rlab/dddmr_navigation.git
-cd ~/dddmr_navigation && git submodule update --init dddmr_docker src/dddmr_lego_loam_bor src/dddmr_rviz_tools
 cd ~/dddmr_navigation/dddmr_docker/docker_file && ./build.bash
 ```
+
+
 ### 2. Download bag files
 To play SLAM, you will need to download bag file (4.0GB). To play pose graph editor, you will need to download pose graph folder (2.6MB).
 ```
-cd ~/dddmr_navigation/src/dddmr_lego_loam_bor && ./download_files.bash
+cd ~/dddmr_navigation/src/dddmr_lego_loam && ./download_files.bash
 ```
 ### 3. Run demo
 #### Create a docker container
