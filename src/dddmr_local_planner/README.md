@@ -21,7 +21,6 @@ The package runs in the docker, so we need to build the image first. We support 
 ```
 cd ~
 git clone https://github.com/dfl-rlab/dddmr_navigation.git
-cd ~/dddmr_navigation && git submodule init && git submodule update
 cd ~/dddmr_navigation/dddmr_docker/docker_file && ./build.bash
 ```
 ### 2. Run demo
