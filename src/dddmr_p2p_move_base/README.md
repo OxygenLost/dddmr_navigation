@@ -5,7 +5,7 @@ The p2p_move_base is different from the move_base in following aspects:
 - The robot will rotate in place to the rough heading and then move out, which is similar to [Nav2_Rotation_Shim_Controller](https://github.com/ros-navigation/navigation2/tree/main/nav2_rotation_shim_controller)
 - The robot will wait for n seconds (waiting_patience) when the prune plan is being blocked, after n seconds if the obstacles remain, it will compute a new global plan to avoid the obstacles.
 - Recovery behaviors are implemented as action servers, therefore, when a goal is being cancelled, it will first cancels recovery behavior (Move base does not allow user to interrupt recovery).
-- Recovery behaviors are plugin-based see: [dddmr_local_planner](https://github.com/dfl-rlab/dddmr_local_planner), allow user to customized recovery behaviors.
+- Recovery behaviors are plugin-based see: [dddmr_local_planner](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_local_planner), allow user to customized recovery behaviors.
   - [ ] TODO: make recovery behaviors configurable in yaml file. Current version only use rotate in place as recovery behavior.
 
 
@@ -16,7 +16,6 @@ The package runs in the docker, so we need to build the image first. We support 
 ```
 cd ~
 git clone https://github.com/dfl-rlab/dddmr_navigation.git
-cd ~/dddmr_navigation && git submodule init && git submodule update
 cd ~/dddmr_navigation/dddmr_docker/docker_file && ./build.bash
 ```
 ### 2. Run demo
