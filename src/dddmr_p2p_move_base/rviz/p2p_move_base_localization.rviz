@@ -24,6 +24,7 @@ Panels:
   - Class: rviz_common/Views
     Expanded:
       - /Current View1
+      - /Current View1/Focal Point1
     Name: Views
     Splitter Ratio: 0.5
   - Class: rviz_common/Time
@@ -64,7 +65,7 @@ Visualization Manager:
         Filter size: 1
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /mapcloud
+        Value: /sub_mapcloud
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
@@ -124,7 +125,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 2
-      Size (m): 0.10000000149011612
+      Size (m): 0.20000000298023224
       Style: Tiles
       Topic:
         Depth: 1
@@ -508,25 +509,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/XYOrbit
-      Distance: 18.393022537231445
+      Distance: 16.690792083740234
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 7.027417182922363
-        Y: 4.498996734619141
-        Z: 3.516592551022768e-05
+        X: -2
+        Y: -2
+        Z: 2.665011379576754e-06
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.7047971487045288
+      Pitch: 0.9447966814041138
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz_default_plugins)
-      Yaw: 1.5203700065612793
+      Yaw: -2.492814540863037
     Saved: ~
 Window Geometry:
   Displays:
@@ -544,5 +545,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1850
-  X: 72
+  X: 70
   Y: 27
