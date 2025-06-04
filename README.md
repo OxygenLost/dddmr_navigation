@@ -14,10 +14,9 @@ Below figure shows the comparison between 2D navigation stack and DDD(3D) naviga
 Our stack is a total solution for a mobile platform to navigate in 3D environments. There are plenty advantages for choosing DDD navigation:
   
 ✨ The standard procedures of DDD mobile robots and 2D mobile robots are the same, make it easier for 2D navigation stack users to transit to DDD navigation without difficulties:
-  1. Mapping and refined the map.
+  1. Mapping and refining the map using our packages and tools.
   2. Turn off mapping, use MCL to localize the robot by providing an initial pose.
-  3. Provide a goal to the robot, the robot will calculate the global plan and avoid obstacles using local planner.
-  4. 
+  3. Send a goal to the robot, the robot will calculate the global plan and avoid obstacles using local planner.
 ✨ DDD navigation is no longer suffered from terrain situations. For example, ramps in factories or wheelchair accessible.
 
 ✨ DDD navigation has been well tested is many fields and is based on the cost-effective hardware, for example, 16 lines lidar, intel NUC/Jetson Orin Nano and consumer-grade imu. We are trying to make the solution as affordable as possible.
