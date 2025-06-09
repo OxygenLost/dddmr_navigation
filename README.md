@@ -17,6 +17,7 @@ Our stack is a total solution for a mobile platform to navigate in 3D environmen
   1. Mapping and refining the map using our packages and tools.
   2. Turn off mapping, use MCL to localize the robot by providing an initial pose.
   3. Send a goal to the robot, the robot will calculate the global plan and avoid obstacles using local planner.
+
 ✨ DDD navigation is no longer suffered from terrain situations. For example, ramps in factories or wheelchair accessible.
 
 ✨ DDD navigation has been well tested is many fields and is based on the cost-effective hardware, for example, 16 lines lidar, intel NUC/Jetson Orin Nano and consumer-grade imu. We are trying to make the solution as affordable as possible.
