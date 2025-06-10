@@ -96,14 +96,14 @@ Press "shift" and select a pose, the selected key frame will be red
 
 ### Select second key frame
 
-Select a pose without press any key, the selected key frame will be green
+Select a pose without pressing any key, the selected key frame will be green
 <p align="center">
 <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/select_second_key_frame.gif" width="600" height="280"/>
 </p>
 
 ### Use ICP to find an edge between the first key frame and the second key frame
 
-The buttons px+, px-, py+, py-, .... are used to fine tune the icp result. When the result is satified, click "Accept", an edge will be added
+The buttons px+, px-, py+, py-, .... are used to fine tune the icp result. When the result is satisfied, click "Accept", an edge will be added
 <p align="center">
 <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/icp.gif" width="600" height="280"/>
 </p>
