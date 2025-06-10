@@ -41,8 +41,11 @@ Once you are in the container, run:
 cd ~/dddmr_navigation && source install/setup.bash
 cd ~/dddmr_bags && ros2 bag play benanli_detention_basin_localization
 ```
-#### Use Plugin on Rviz2
+#### Use Plugin on Rviz2 - Demonstration Video
 Use 3D Pose Estimate to provide initial pose and use 3D Goal Pose to provide a goal.
+<!--
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/p2p_move_base/p2p_move_base_annotated.png" width="720" height="420"/>
 </p>
+-->
+[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/p2p_move_base/p2p_move_base_annotated.png)](https://www.youtube.com/watch?7zyrRIE7eaU)
