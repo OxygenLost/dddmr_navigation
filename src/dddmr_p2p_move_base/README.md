@@ -48,4 +48,4 @@ Use 3D Pose Estimate to provide initial pose and use 3D Goal Pose to provide a g
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/p2p_move_base/p2p_move_base_annotated.png" width="720" height="420"/>
 </p>
 -->
-[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/p2p_move_base/p2p_move_base_annotated.png)](https://www.youtube.com/watch?7zyrRIE7eaU)
+[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/p2p_move_base/p2p_move_base_annotated.png)](https://www.youtube.com/watch?v=7zyrRIE7eaU)
