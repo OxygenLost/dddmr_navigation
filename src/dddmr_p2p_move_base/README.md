@@ -29,7 +29,7 @@ cd ~/dddmr_navigation/dddmr_docker && ./run_demo.bash
 ```
 cd ~/dddmr_navigation && source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
-ros2 launch p2p_move_base p2p_move_base_bag.launch
+ros2 launch p2p_move_base p2p_move_base_localization.launch
 ```
 #### Play bag file in the container
 We need another terminal to play the bag file. Open another terminal and run following command to get into the container:
@@ -41,8 +41,11 @@ Once you are in the container, run:
 cd ~/dddmr_navigation && source install/setup.bash
 cd ~/dddmr_bags && ros2 bag play benanli_detention_basin_localization
 ```
-#### Use Plugin on Rviz2
+#### Use Plugin on Rviz2 - Demonstration Video
 Use 3D Pose Estimate to provide initial pose and use 3D Goal Pose to provide a goal.
+
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/p2p_move_base/p2p_move_base_annotated.png" width="720" height="420"/>
 </p>
+
+[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/p2p_move_base/p2p_move_base_video.png)](https://www.youtube.com/watch?v=7zyrRIE7eaU)
