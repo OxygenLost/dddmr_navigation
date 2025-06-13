@@ -173,7 +173,7 @@ void InteractivePoseGraphEditor::nodeSelectionCB(const std_msgs::msg::String::Sh
     cloud2MsgTemp.header.frame_id = "camera_init";
     node_2_pub_->publish(cloud2MsgTemp);
     
-    //@ calculate node1 to node 2 tf
+    //@ calculate node2 to node1 tf
     PointTypePose node1 = mo_->cloudKeyPoses6D->points[current_operation_nodes_.first];
     tf2::Transform tf2_node1_pose;
     tf2::Quaternion q1;
@@ -188,32 +188,14 @@ void InteractivePoseGraphEditor::nodeSelectionCB(const std_msgs::msg::String::Sh
     q2.setRPY( node2.roll, node2.pitch, node2.yaw);
     tf2_node2_pose.setRotation(q2);
     tf2_node2_pose.setOrigin(tf2::Vector3(node2.x, node2.y, node2.z));
-    RCLCPP_DEBUG(this->get_logger(), "Node 1 pose: %.2f, %.2f, %.2f", tf2_node2_pose.getOrigin().x(), tf2_node2_pose.getOrigin().y(), tf2_node2_pose.getOrigin().z());    
+    RCLCPP_DEBUG(this->get_logger(), "Node 2 pose: %.2f, %.2f, %.2f", tf2_node2_pose.getOrigin().x(), tf2_node2_pose.getOrigin().y(), tf2_node2_pose.getOrigin().z());    
     
-    tf2::Transform tf2_node12node2;
-    tf2_node12node2.mult(tf2_node1_pose.inverse(), tf2_node2_pose);
+    tf2::Transform tf2_node22node1;
+    tf2_node22node1.mult(tf2_node2_pose.inverse(), tf2_node1_pose);
     
-    RCLCPP_INFO(this->get_logger(), "Node 1 to Node 2 relative pose: %.2f, %.2f, %.2f", tf2_node12node2.getOrigin().x(), tf2_node12node2.getOrigin().y(), tf2_node12node2.getOrigin().z());  
+    RCLCPP_INFO(this->get_logger(), "Node 2 to Node 1 relative pose: %.2f, %.2f, %.2f", tf2_node22node1.getOrigin().x(), tf2_node22node1.getOrigin().y(), tf2_node22node1.getOrigin().z());  
     
-    // trans_node1_2_node2_.transform.translation.x = tf2_node12node2_inverse.getOrigin().x();
-    // trans_node1_2_node2_.transform.translation.y = tf2_node12node2_inverse.getOrigin().y();
-    // trans_node1_2_node2_.transform.translation.z = tf2_node12node2_inverse.getOrigin().z();
-
-    // trans_node1_2_node2_.transform.rotation.x = tf2_node12node2_inverse.getRotation().x();
-    // trans_node1_2_node2_.transform.rotation.y = tf2_node12node2_inverse.getRotation().y();
-    // trans_node1_2_node2_.transform.rotation.z = tf2_node12node2_inverse.getRotation().z();
-    // trans_node1_2_node2_.transform.rotation.w = tf2_node12node2_inverse.getRotation().w();
-
-    trans_node1_2_node2_.transform.translation.x = 0.0;
-    trans_node1_2_node2_.transform.translation.y = 0.0;
-    trans_node1_2_node2_.transform.translation.z = 0.0;
-
-    trans_node1_2_node2_.transform.rotation.x = 0.0;
-    trans_node1_2_node2_.transform.rotation.y = 0.0;
-    trans_node1_2_node2_.transform.rotation.z = 0.0;
-    trans_node1_2_node2_.transform.rotation.w = 1.0;
-
-    node1_2_node2_af3d_ = tf2::transformToEigen(trans_node1_2_node2_);
+    node1_2_node2_af3_ = Eigen::Affine3f::Identity();
 
   }
 
@@ -236,43 +218,14 @@ void InteractivePoseGraphEditor::operationCommandCB(const std_msgs::msg::String:
       RCLCPP_INFO(this->get_logger(), "Nodes are not selected yet.");
       return;      
     }
-    //TODO: voxel and then icp, can make result better, because icp will focus clustered area
-    // ICP Settings
-    /*
-    pcl::IterativeClosestPoint<PointType, PointType> icp;
-    icp.setMaxCorrespondenceDistance(100);
-    icp.setMaximumIterations(100);
-    icp.setTransformationEpsilon(1e-6);
-    icp.setEuclideanFitnessEpsilon(1e-6);
-    icp.setRANSACIterations(0);
-    // Align clouds
-    icp.setInputSource(node_2_pointcloud_);
-    icp.setInputTarget(node_1_pointcloud_);
-    pcl::PointCloud<PointType>::Ptr unused_result(
-        new pcl::PointCloud<PointType>());
-    icp.align(*unused_result);
-
-    //icp.hasConverged() == false
-    //icp.getFitnessScore() > _history_keyframe_fitness_score)
-    icp_score_ = icp.getFitnessScore();
-    RCLCPP_INFO(this->get_logger(), "ICP score: %.2f", icp_score_);
-    */
-    
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-
-    RCLCPP_INFO(this->get_logger(), "---------------------Node 1 to Node 2 relative pose: %.2f, %.2f, %.2f", 
-              tf2_ros_node1_2_node2.transform.translation.x, tf2_ros_node1_2_node2.transform.translation.y, tf2_ros_node1_2_node2.transform.translation.z);  
 
     pcl::PointCloud<PointType>::Ptr cloud_source_opti_transformed_ptr;
     cloud_source_opti_transformed_ptr.reset(new pcl::PointCloud<PointType>());
     Eigen::Matrix4f T_predict, T_final;
-    T_predict.setIdentity();
-
-    T_predict << 1.0, 0.0, 0.0, tf2_ros_node1_2_node2.transform.translation.x,
-                  0.0, 1.0, 0.0, tf2_ros_node1_2_node2.transform.translation.y,
-                  0.0, 0.0, 1.0, tf2_ros_node1_2_node2.transform.translation.z,
-                  0.0, 0.0, 0.0, 1.0;
-
+    
+    T_predict = node1_2_node2_af3_.matrix();
+    
+    //RCLCPP_INFO_STREAM(this->get_logger(), "Relative: \n" << T_predict);  
 
     OptimizedICPGN icp_opti;
     icp_opti.SetTargetCloud(node_1_pointcloud_);
@@ -371,158 +324,86 @@ void InteractivePoseGraphEditor::operationCommandCB(const std_msgs::msg::String:
   
   double step = 0.5;
   if(msg->data == "px+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.x += step;
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.5, 0.0, 0.0;
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "px-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.x -= step;
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << -0.5, 0.0, 0.0;
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "py+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.y += step;
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, 0.5, 0.0;
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "py-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.y -= step;
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, -0.5, 0.0;
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "pz+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.z += step;
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, 0.0, 0.5;
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "pz-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.z -= step;
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, 0.0, -0.5;
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "roll+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    roll += 0.1;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (0.1, Eigen::Vector3f::UnitX()));  
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "roll-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    roll -= 0.1;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (-0.1, Eigen::Vector3f::UnitX()));  
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "pitch+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    pitch += 0.1;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (0.1, Eigen::Vector3f::UnitY()));  
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "pitch-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    pitch -= 0.1;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (-0.1, Eigen::Vector3f::UnitY()));  
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "yaw+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    yaw += 0.1;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (0.1, Eigen::Vector3f::UnitZ()));  
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "yaw-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(node1_2_node2_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    yaw -= 0.1;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    node1_2_node2_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (-0.1, Eigen::Vector3f::UnitZ()));  
+    node1_2_node2_af3_ = transform*node1_2_node2_af3_;
     publish_icped_pc = true;
   }
 
@@ -530,7 +411,7 @@ void InteractivePoseGraphEditor::operationCommandCB(const std_msgs::msg::String:
   if(publish_icped_pc){
     //@ The if statement is to prevent no icp has been done
     node_2_pointcloud_icp_.reset(new pcl::PointCloud<PointType>());
-    pcl::transformPointCloud(*node_2_pointcloud_, *node_2_pointcloud_icp_, node1_2_node2_af3d_);
+    pcl::transformPointCloud(*node_2_pointcloud_, *node_2_pointcloud_icp_, node1_2_node2_af3_);
 
     sensor_msgs::msg::PointCloud2 icpedcloud2MsgTemp;
     pcl::toROSMsg(*node_2_pointcloud_icp_, icpedcloud2MsgTemp);
