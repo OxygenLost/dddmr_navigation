@@ -35,6 +35,7 @@ class BagReader : public rclcpp::Node
     bool pause_mapping_;
     float icp_score_;
     float history_keyframe_search_radius_;
+    bool save_current_map_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr raw_point_cloud_pub_;
 
   private:
@@ -51,9 +52,11 @@ class BagReader : public rclcpp::Node
     void bagICPScoreCb(const std_msgs::msg::Float32::SharedPtr msg);
     rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_history_keyframe_search_radius_;
     void bagHistoryKeyframeSearchRadiusCb(const std_msgs::msg::Float32::SharedPtr msg);
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_save_current_map_;
+    void saveCurrentMapCb(const std_msgs::msg::Bool::SharedPtr msg);
 };
 
-BagReader::BagReader():Node("bag_reader"), pause_mapping_(true){
+BagReader::BagReader():Node("bag_reader"), pause_mapping_(true), save_current_map_(false){
   
   declare_parameter("bag_file_dir", rclcpp::ParameterValue(""));
   this->get_parameter("bag_file_dir", bag_file_dir_);
@@ -85,6 +88,9 @@ BagReader::BagReader():Node("bag_reader"), pause_mapping_(true){
   sub_history_keyframe_search_radius_ = this->create_subscription<std_msgs::msg::Float32>(
         "lego_loam_bag_history_keyframe_search_radius", 1,
         std::bind(&BagReader::bagHistoryKeyframeSearchRadiusCb, this, std::placeholders::_1));
+  sub_save_current_map_ = this->create_subscription<std_msgs::msg::Bool>(
+        "lego_loam_bag_save_current_map", 1,
+        std::bind(&BagReader::saveCurrentMapCb, this, std::placeholders::_1));
 }
 
 void BagReader::bagPauseCb(const std_msgs::msg::Bool::SharedPtr msg){
@@ -98,6 +104,9 @@ void BagReader::bagICPScoreCb(const std_msgs::msg::Float32::SharedPtr msg){
 }
 void BagReader::bagHistoryKeyframeSearchRadiusCb(const std_msgs::msg::Float32::SharedPtr msg){
   history_keyframe_search_radius_ = msg->data;
+}
+void BagReader::saveCurrentMapCb(const std_msgs::msg::Bool::SharedPtr msg){
+  save_current_map_ = msg->data;
 }
 
 int main(int argc, char** argv) {
@@ -142,6 +151,12 @@ int main(int argc, char** argv) {
     if(BR->pause_mapping_){
       rclcpp::spin_some(BR);
       rclcpp::spin_some(IPGE);
+      if(BR->save_current_map_){
+        std::shared_ptr<std_srvs::srv::Empty::Request> request;
+        std::shared_ptr<std_srvs::srv::Empty::Response> response;
+        MO->pcdSaver(request, response);
+        BR->save_current_map_ = false;
+      }
       continue;
     }
     
@@ -175,6 +190,7 @@ int main(int argc, char** argv) {
 
     if (topic == BR->getPointCloudTopic())
     {
+      cycle_cnt++;
       sensor_msgs::msg::PointCloud2 msg;
       auto zero_time_stamp = msg.header.stamp;
       auto serializer = rclcpp::Serialization<sensor_msgs::msg::PointCloud2>();
@@ -209,7 +225,6 @@ int main(int argc, char** argv) {
         MO->loopClosureThread();
         MO->groundEdgeDetectionThread();
       }
-      cycle_cnt++;
     }
     //@ calculate bag time and wall ime
     double bag_time_diff = (BR->current_odom_stamp_ - BR->first_odom_stamp_).seconds();
@@ -226,6 +241,12 @@ int main(int argc, char** argv) {
     if(wall_time_diff - last_frame_number_print_time > 1.0){
       BR->writeLog("Processing Frame Number: " + std::to_string(cycle_cnt));
       last_frame_number_print_time = wall_time_diff;
+    }
+    if(BR->save_current_map_){
+      std::shared_ptr<std_srvs::srv::Empty::Request> request;
+      std::shared_ptr<std_srvs::srv::Empty::Response> response;
+      MO->pcdSaver(request, response);
+      BR->save_current_map_ = false;
     }
     rclcpp::spin_some(BR); 
   }

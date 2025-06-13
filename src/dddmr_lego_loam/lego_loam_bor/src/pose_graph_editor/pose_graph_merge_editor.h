@@ -42,8 +42,10 @@ private:
   pcl::PointCloud<PointType>::Ptr merge_second_key_frame_pointcloud_;
   pcl::PointCloud<PointType>::Ptr second_frame_pointcloud_icp_;
   
+  Eigen::Affine3f first_frame_2_second_frame_af3_;
   Eigen::Affine3d first_frame_2_second_frame_af3d_;
   std::pair<int, int> merged_edge_;
+
 };
 
 #endif // POSEGRAPHMERGINGEDITOR_H

@@ -177,7 +177,7 @@ void PoseGraphEditor::generateISAM(){
   
   std::set<int> poses_set; //@ if we already has pose in graph we can not provie initialEstimate, so we store them and check them
   
-  RCLCPP_INFO(this->get_logger(), "Generate ISMA with edges: %lu", pcd_edges_->points.size());
+  RCLCPP_INFO(this->get_logger(), "Generate ISAM with edges: %lu", pcd_edges_->points.size());
   for(auto it=pcd_edges_->points.begin();it!=pcd_edges_->points.end();it++){
     
     if((*it).y==(*it).z){

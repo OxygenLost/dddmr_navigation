@@ -226,6 +226,18 @@ ament_target_dependencies(pointcloud2occupancy
   ${dependencies}
 )
 
+#optimized icp gn playground
+add_executable(optimized_icp_gn_playground
+  src/opt_icp_gn/optimized_ICP_GN_playground.cpp
+)
+target_link_libraries(optimized_icp_gn_playground
+  opt_icp_gn
+  ${PCL_LIBRARIES}
+)
+ament_target_dependencies(optimized_icp_gn_playground
+  ${dependencies}
+)
+
 install(TARGETS
   opt_icp_gn
   image_projection
@@ -246,6 +258,7 @@ install(TARGETS
   lego_loam_bag
   pose_graph_editor_node
   pointcloud2occupancy
+  optimized_icp_gn_playground
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -254,9 +267,10 @@ install(DIRECTORY include/
 )
 
 install(DIRECTORY
-  "launch"
-  "config"
-  "rviz"
+  launch
+  config
+  rviz
+  pcd
   DESTINATION share/${PROJECT_NAME}/
 )
 

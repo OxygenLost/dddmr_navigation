@@ -104,12 +104,16 @@ void PoseGraphMergeEditor::nodeSelectionCB(const std_msgs::msg::String::SharedPt
   if(is_anchor){
 
     if(one_node_full_name.find(pge_vector_[0]->getName()) != std::string::npos){
+      RCLCPP_WARN(this->get_logger().get_child("PGME"), "First key frame selected node: %d", selected_node);
       merge_first_key_frame_pointcloud_.reset(new pcl::PointCloud<PointType>());
       for(int i=selected_node-3; i<selected_node+4; i++){
-        if(i<0 || i > pge_vector_[0]->cornerCloudKeyFrames_.size()-1)
+        if(i<0 || i > pge_vector_[0]->cornerCloudKeyFrames_.size()-1){
+          RCLCPP_DEBUG(this->get_logger().get_child("PGME"), "First key frame skip node: %d", i);
           continue;
+        }
         *merge_first_key_frame_pointcloud_ += (*pge_vector_[0]->cornerCloudKeyFrames_[i]);
       }
+      RCLCPP_WARN(this->get_logger().get_child("PGME"), "First key frame size: %lu", merge_first_key_frame_pointcloud_->points.size());
       sensor_msgs::msg::PointCloud2 cloud1MsgTemp;
       pcl::toROSMsg(*merge_first_key_frame_pointcloud_, cloud1MsgTemp);
       cloud1MsgTemp.header.stamp = clock_->now();
@@ -119,19 +123,26 @@ void PoseGraphMergeEditor::nodeSelectionCB(const std_msgs::msg::String::SharedPt
     }
 
     if(pge_vector_.size()>1 && one_node_full_name.find(pge_vector_[1]->getName()) != std::string::npos){
+      RCLCPP_WARN(this->get_logger().get_child("PGME"), "Second key frame selected node: %d", selected_node);
       merge_second_key_frame_pointcloud_.reset(new pcl::PointCloud<PointType>());
       for(int i=selected_node-3; i<selected_node+4; i++){
-        if(i<0 || i > pge_vector_[0]->cornerCloudKeyFrames_.size()-1)
+        if(i<0 || i > pge_vector_[1]->cornerCloudKeyFrames_.size()-1){
+          RCLCPP_DEBUG(this->get_logger().get_child("PGME"), "Second key frame skip node: %d", i);
           continue;
+        }
         *merge_second_key_frame_pointcloud_ += (*pge_vector_[1]->cornerCloudKeyFrames_[i]);
       }
-      sensor_msgs::msg::PointCloud2 cloud1MsgTemp;
-      pcl::toROSMsg(*merge_second_key_frame_pointcloud_, cloud1MsgTemp);
-      cloud1MsgTemp.header.stamp = clock_->now();
-      cloud1MsgTemp.header.frame_id = pge_vector_[1]->getName();
-      merge_second_key_frame_pub_->publish(cloud1MsgTemp);
+      RCLCPP_WARN(this->get_logger().get_child("PGME"), "Second key frame size: %lu", merge_second_key_frame_pointcloud_->points.size());
+      sensor_msgs::msg::PointCloud2 cloud2MsgTemp;
+      pcl::toROSMsg(*merge_second_key_frame_pointcloud_, cloud2MsgTemp);
+      cloud2MsgTemp.header.stamp = clock_->now();
+      cloud2MsgTemp.header.frame_id = pge_vector_[1]->getName();
+      merge_second_key_frame_pub_->publish(cloud2MsgTemp);
       merged_edge_.second = selected_node + pge_vector_[0]->poses_.size();
     }
+
+    first_frame_2_second_frame_af3_ = Eigen::Affine3f::Identity();
+
   }
 
 
@@ -304,42 +315,27 @@ void PoseGraphMergeEditor::operationCommandCB(const std_msgs::msg::String::Share
       RCLCPP_INFO(this->get_logger().get_child("PGME"), "Must select two key frames.");
       return;
     }
-    /*
-    pcl::IterativeClosestPoint<PointType, PointType> icp;
-    icp.setMaxCorrespondenceDistance(100);
-    icp.setMaximumIterations(100);
-    icp.setTransformationEpsilon(1e-6);
-    icp.setEuclideanFitnessEpsilon(1e-6);
-    icp.setRANSACIterations(10);
-    // Align clouds
-    icp.setInputSource(merge_second_key_frame_pointcloud_);
-    icp.setInputTarget(merge_first_key_frame_pointcloud_);
-    pcl::PointCloud<PointType>::Ptr unused_result(new pcl::PointCloud<PointType>());
-    icp.align(*unused_result);
+    
+    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
 
-    //icp.hasConverged() == false
-    //icp.getFitnessScore() > _history_keyframe_fitness_score)
-    auto icp_score = icp.getFitnessScore();
-    RCLCPP_INFO(this->get_logger(), "ICP score: %.2f", icp_score);
-    
-    auto first_frame_2_second_frame_af3 = icp.getFinalTransformation();
-    first_frame_2_second_frame_af3d_ = first_frame_2_second_frame_af3.cast<double>();
-    second_frame_pointcloud_icp_.reset(new pcl::PointCloud<PointType>());
-    pcl::transformPointCloud(*merge_second_key_frame_pointcloud_, *second_frame_pointcloud_icp_, first_frame_2_second_frame_af3d_);
-    
-    */
     pcl::PointCloud<PointType>::Ptr cloud_source_opti_transformed_ptr;
     cloud_source_opti_transformed_ptr.reset(new pcl::PointCloud<PointType>());
     Eigen::Matrix4f T_predict, T_final;
+
+    /*
     T_predict.setIdentity();
-    T_predict << 1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 1.0, 0.0,
-                0.0, 0.0, 0.0, 1.0;
+    T_predict << 1.0, 0.0, 0.0, tf2_ros_node1_2_node2.transform.translation.x,
+                  0.0, 1.0, 0.0, tf2_ros_node1_2_node2.transform.translation.y,
+                  0.0, 0.0, 1.0, tf2_ros_node1_2_node2.transform.translation.z,
+                  0.0, 0.0, 0.0, 1.0;
+    */
+
+    T_predict = first_frame_2_second_frame_af3_.matrix().inverse();
+
     OptimizedICPGN icp_opti;
     icp_opti.SetTargetCloud(merge_first_key_frame_pointcloud_);
     icp_opti.SetTransformationEpsilon(1e-4);
-    icp_opti.SetMaxIterations(50);
+    icp_opti.SetMaxIterations(100);
     icp_opti.SetMaxCorrespondDistance(20.0);
     icp_opti.Match(merge_second_key_frame_pointcloud_, T_predict, cloud_source_opti_transformed_ptr, T_final);
     auto icp_score = icp_opti.GetFitnessScore();
@@ -359,165 +355,109 @@ void PoseGraphMergeEditor::operationCommandCB(const std_msgs::msg::String::Share
   }
 
   if(msg->data == "merge_px+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.x += 0.01;
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.5, 0.0, 0.0;
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_px-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.x -= 0.01;
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << -0.5, 0.0, 0.0;
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_py+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.y += 0.01;
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, 0.5, 0.0;
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_py-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.y -= 0.01;
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, -0.5, 0.0;
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_pz+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.z += 0.01;
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, 0.0, 0.5;
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_pz-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-    tf2_ros_node1_2_node2.transform.translation.z -= 0.01;
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0, 0.0, -0.5;
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_roll+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
 
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    roll += 0.01;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (0.1, Eigen::Vector3f::UnitX()));  
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_roll-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
 
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    roll -= 0.01;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (-0.1, Eigen::Vector3f::UnitX()));  
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
+
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_pitch+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    pitch += 0.01;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (0.1, Eigen::Vector3f::UnitY()));  
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_pitch-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    pitch -= 0.01;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (-0.1, Eigen::Vector3f::UnitY()));  
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_yaw+"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    yaw += 0.01;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (0.1, Eigen::Vector3f::UnitZ()));  
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
     publish_icped_pc = true;
   }
 
   if(msg->data == "merge_yaw-"){
-    geometry_msgs::msg::TransformStamped tf2_ros_node1_2_node2 = tf2::eigenToTransform(first_frame_2_second_frame_af3d_);
-
-    double roll, pitch, yaw;
-    tf2::Matrix3x3(tf2::Quaternion(tf2_ros_node1_2_node2.transform.rotation.x, 
-                    tf2_ros_node1_2_node2.transform.rotation.y, 
-                    tf2_ros_node1_2_node2.transform.rotation.z, 
-                    tf2_ros_node1_2_node2.transform.rotation.w)).getRPY(roll, pitch, yaw);
-    yaw -= 0.01;
-    tf2::Quaternion q;
-    q.setRPY(roll, pitch, yaw);
-    tf2_ros_node1_2_node2.transform.rotation.x = q.x();
-    tf2_ros_node1_2_node2.transform.rotation.y = q.y();
-    tf2_ros_node1_2_node2.transform.rotation.z = q.z();
-    tf2_ros_node1_2_node2.transform.rotation.w = q.w();
-    first_frame_2_second_frame_af3d_ = tf2::transformToEigen(tf2_ros_node1_2_node2);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.rotate (Eigen::AngleAxisf (-0.1, Eigen::Vector3f::UnitZ()));  
+    first_frame_2_second_frame_af3_ = transform*first_frame_2_second_frame_af3_;
     publish_icped_pc = true;
   }
 
   if(publish_icped_pc){
     //@ The if statement is to prevent no icp has been done
     second_frame_pointcloud_icp_.reset(new pcl::PointCloud<PointType>());
-    pcl::transformPointCloud(*merge_second_key_frame_pointcloud_, *second_frame_pointcloud_icp_, first_frame_2_second_frame_af3d_);
+    pcl::transformPointCloud(*merge_second_key_frame_pointcloud_, *second_frame_pointcloud_icp_, first_frame_2_second_frame_af3_);
 
     sensor_msgs::msg::PointCloud2 icpedcloud2MsgTemp;
     pcl::toROSMsg(*second_frame_pointcloud_icp_, icpedcloud2MsgTemp);

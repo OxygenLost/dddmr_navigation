@@ -359,7 +359,7 @@ void InteractivePoseGraphEditor::operationCommandCB(const std_msgs::msg::String:
     gtsam::Pose3 poseTo = Pose3(Rot3::RzRyRx(roll, pitch, yaw), 
                                 Point3(tf2_icped_node2.getOrigin().x(), tf2_icped_node2.getOrigin().y(), tf2_icped_node2.getOrigin().z()));
     */
-    // manual closure, so make it very strong
+    // manual closure, so make it very strong by increasing weight
     for(int i=0;i<10;i++){
       mo_->addEdgeFromPose(current_operation_nodes_.second, current_operation_nodes_.first, poseFrom, poseTo, icp_score_);
     }
