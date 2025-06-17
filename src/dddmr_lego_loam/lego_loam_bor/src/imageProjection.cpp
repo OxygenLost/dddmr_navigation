@@ -32,7 +32,7 @@
 using std::placeholders::_1;
 
 ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& output_channel)
-    : Node(name), _output_channel(output_channel)
+    : Node(name), _output_channel(output_channel), first_frame_processed_(0)
 {
 
   //supress the no intensity found log
@@ -310,6 +310,7 @@ void ImageProjection::groundRemoval() {
   patched_ground_edge_->points.clear();
   for (size_t j = 0; j < _horizontal_scans; ++j) {
     size_t ring_edge = 0;
+    size_t closest_ring_edge = _ground_scan_index;
     for (size_t i = 0; i < _ground_scan_index; ++i) {
       size_t lowerInd = j + (i)*_horizontal_scans;
       size_t upperInd = j + (i + 1) * _horizontal_scans;
@@ -338,8 +339,11 @@ void ImageProjection::groundRemoval() {
         //x = _full_cloud->points[lowerInd].x + dX*t
         //y = _full_cloud->points[lowerInd].y + dY*t
         //z = _full_cloud->points[lowerInd].z + dZ*t
-        
+        if(i<closest_ring_edge && i!=_ground_scan_index) //we dont casting the last one
+          closest_ring_edge = i;
+
         float ds = sqrt(dX*dX + dY*dY + dZ*dZ);
+
         if(ds<distance_for_patch_between_rings_){
           ring_edge = i+1;
           float dt = 1.0/(ds/0.1+1);
@@ -367,6 +371,32 @@ void ImageProjection::groundRemoval() {
     a_pt.z = _full_cloud->points[ringEdgeInd].z;
     a_pt.intensity = 100;
     patched_ground_edge_->push_back(a_pt);
+
+    if(first_frame_processed_<5 && closest_ring_edge < _ground_scan_index){
+      //@ patch ground from closest ring edge to base_link
+      size_t closest_ring_edgeInd = j + (closest_ring_edge)*_horizontal_scans;
+      float dXf = -
+          _full_cloud->points[closest_ring_edgeInd].x;
+      float dYf = -
+          _full_cloud->points[closest_ring_edgeInd].y;
+      float dZf = -
+          _full_cloud->points[closest_ring_edgeInd].z;
+
+      for(float t=0; t<=1.0; t+=0.05){
+        PointType a_ptf;
+        a_ptf.intensity = 0.0;
+        a_ptf.x = _full_cloud->points[closest_ring_edgeInd].x + dXf*t;
+        a_ptf.y = _full_cloud->points[closest_ring_edgeInd].y + dYf*t;
+        a_ptf.z = _full_cloud->points[closest_ring_edgeInd].z; // mitigate height difference
+        patched_ground_->push_back(a_ptf);
+      }
+      PointType a_ptf;
+      a_ptf.intensity = 0.0;
+      a_ptf.x = _full_cloud->points[closest_ring_edgeInd].x + dXf;
+      a_ptf.y = _full_cloud->points[closest_ring_edgeInd].y + dYf;
+      a_ptf.z = _full_cloud->points[closest_ring_edgeInd].z;
+      patched_ground_->push_back(a_ptf);
+    }
   }
   //@ we have ring edge, mark intensity for those edge points
 
@@ -580,6 +610,7 @@ void ImageProjection::publishClouds() {
   std::swap(out.patched_ground_edge, patched_ground_edge_);
 
   _output_channel.send( std::move(out) );
+  first_frame_processed_++;
 
 }
 

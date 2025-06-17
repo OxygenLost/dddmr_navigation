@@ -86,6 +86,7 @@ class ImageProjection : public rclcpp::Node
     float _maximum_detection_range;
     float _minimum_detection_range;
     double distance_for_patch_between_rings_;
+    int first_frame_processed_;
 };
 
 
