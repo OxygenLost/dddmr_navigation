@@ -109,15 +109,6 @@ The buttons px+, px-, py+, py-, .... are used to fine tune the icp result. When 
 </p>
 
 ****
-
-## Edit the Second Pose Graph
-### Open another pose graph folder
-Tick the second radio button so you will be able to work on the second pose graph. All operations will be activated on the second pose graph.
-<p align="center">
-<img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/second_pg_editor.gif" width="700" height="320"/>
-</p>
-
-****
 ## Merge two pose graphs
 #### Switch to merge panel
 
