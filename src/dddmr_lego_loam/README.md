@@ -120,14 +120,27 @@ Tick the second radio button so you will be able to work on the second pose grap
 ****
 ## Merge two pose graphs
 #### Switch to merge panel
+
+<table align='center'>
+  <tr width="100%">
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/map1.png" width="420" height="260"/><p align='center'>Map1</p></td>
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/map2.png" width="420" height="260"/><p align='center'>Map2</p></td>
+  </tr>
+</table>
+<table align='center'>
+  <tr width="100%">
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/map1+2.png" width="420" height="260"/><p align='center'>Map1+2</p></td>
+  </tr>
+</table>
 The Merge ICP button will match the first key frame of each pose graph. i.e.: Merge red key frame of the first pose graph and the red key frame of the second pose graph.
-After click accept merge, there will be a pop up window to ask thenew directory to save the merged result.
+After click accept merge, there will be a pop up window to ask the new directory to save the merged result.
 Once the result is saved, you can go back to pose graph panel to keep working on the merge result.
 Steps:
 1. Switch to the first pose graph, and pressed "shift" to select the first key frame of pose graph 1.
 2. Switch to the second pose graph, and pressed "shift" to select the first key frame of pose graph 2.
 3. Tick Merge visualization on the Rviz, then you will see two key frames. You can ICP them and fine tune the result.
 4. Click accpet to save the result.
-<p align="center">
-<img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/merge.gif" width="700" height="320"/>
-</p>
+
+#### Check the demo video:
+
+[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/merge_yt.png)](https://www.youtube.com/watch?v=7zyrRIE7eaU)
