@@ -110,7 +110,6 @@ The buttons px+, px-, py+, py-, .... are used to fine tune the icp result. When 
 
 ****
 ## Merge two pose graphs
-#### Switch to merge panel
 
 <table align='center'>
   <tr width="100%">
