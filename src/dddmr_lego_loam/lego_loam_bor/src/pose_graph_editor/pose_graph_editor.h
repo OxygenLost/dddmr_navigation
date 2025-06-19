@@ -151,6 +151,8 @@ private:
   pcl::PointCloud<PointType>::Ptr ground_;
   std::string current_focus_pg_;
   
+  Eigen::Affine3f first_frame_2_second_frame_af3_;
+  
 };
 
 #endif // PoseGraphEditor_H
