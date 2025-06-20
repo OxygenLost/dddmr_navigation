@@ -3,6 +3,7 @@
   <!--name argument is not required, because it will overwrite all node name in the exec-->
   <node pkg="lego_loam_bor" exec="lego_loam" output="screen" respawn="false">
     <param from="$(find-pkg-share lego_loam_bor)/config/loam_c16_config.yaml" />
+    <remap from="/lslidar_point_cloud" to="/lslidar_point_cloud"/>
   </node>
 
   <node pkg="rviz2" exec="rviz2" output="screen" respawn="false" args="-d $(find-pkg-share lego_loam_bor)/rviz/lego_loam.rviz">

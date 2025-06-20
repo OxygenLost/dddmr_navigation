@@ -236,6 +236,9 @@ void ImageProjection::projectPointCloud() {
   // range image projection
   const size_t cloudSize = _laser_cloud_in->points.size();
 
+  //if(_vertical_scans*_horizontal_scans!=_laser_cloud_in->points.size())
+  //  RCLCPP_ERROR(this->get_logger(), "Number of lidar points %lu does not match the %d*%d", _laser_cloud_in->points.size(), _vertical_scans, _horizontal_scans);
+
   for (size_t i = 0; i < cloudSize; ++i) {
     PointType thisPoint = _laser_cloud_in->points[i];
 
@@ -254,9 +257,9 @@ void ImageProjection::projectPointCloud() {
 
     float horizonAngle = std::atan2(thisPoint.x, thisPoint.y);
     
-    if(horizonAngle>=0.7854 && horizonAngle<=1.57+0.7854 && range<6.0){
-      continue;
-    }
+    //if(horizonAngle>=0.7854 && horizonAngle<=1.57+0.7854 && range<6.0){
+    //  continue;
+    //}
 
     int columnIdn = -round((horizonAngle - M_PI_2) / _ang_resolution_X) + _horizontal_scans * 0.5;
 
@@ -311,6 +314,7 @@ void ImageProjection::groundRemoval() {
   for (size_t j = 0; j < _horizontal_scans; ++j) {
     size_t ring_edge = 0;
     size_t closest_ring_edge = _ground_scan_index;
+    bool do_patch = false;
     for (size_t i = 0; i < _ground_scan_index; ++i) {
       size_t lowerInd = j + (i)*_horizontal_scans;
       size_t upperInd = j + (i + 1) * _horizontal_scans;
@@ -343,7 +347,8 @@ void ImageProjection::groundRemoval() {
           closest_ring_edge = i;
 
         float ds = sqrt(dX*dX + dY*dY + dZ*dZ);
-
+        
+        //@ if distance between is too large, we do not patch, because of too many unknown betweem rings
         if(ds<distance_for_patch_between_rings_){
           ring_edge = i+1;
           float dt = 1.0/(ds/0.1+1);
@@ -361,6 +366,7 @@ void ImageProjection::groundRemoval() {
           a_pt.y = _full_cloud->points[lowerInd].y + dY;
           a_pt.z = _full_cloud->points[lowerInd].z + dZ;
           patched_ground_->push_back(a_pt);
+          do_patch = true;
         }
       }
     }
@@ -372,7 +378,7 @@ void ImageProjection::groundRemoval() {
     a_pt.intensity = 100;
     patched_ground_edge_->push_back(a_pt);
 
-    if(first_frame_processed_<5 && closest_ring_edge < _ground_scan_index){
+    if(do_patch && first_frame_processed_<5 && closest_ring_edge < _ground_scan_index){
       //@ patch ground from closest ring edge to base_link
       size_t closest_ring_edgeInd = j + (closest_ring_edge)*_horizontal_scans;
       float dXf = -
