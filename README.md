@@ -26,7 +26,7 @@ Our stack is a total solution for a mobile platform to navigate in 3D environmen
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_navigation/navigation_diagram.png" width="780" height="560"/>
 </p>
 
-
+🤝 We would like to thank the contributors and users of [Navigation](https://github.com/ros-planning/navigation) and [Navigation2](https://github.com/ros-navigation/navigation2), ddd navigation stands on your shoulder!
 
 
 ## 🏁 Detail documentations for each package
