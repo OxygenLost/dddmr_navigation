@@ -68,6 +68,10 @@ struct ProjectionOut
   pcl::PointCloud<PointType>::Ptr outlier_cloud;
   pcl::PointCloud<PointType>::Ptr patched_ground;
   pcl::PointCloud<PointType>::Ptr patched_ground_edge;
+  std::string odom_type;
+  geometry_msgs::msg::TransformStamped trans_c2s;
+  geometry_msgs::msg::TransformStamped trans_c2b;
+  geometry_msgs::msg::TransformStamped trans_b2s;
   cloud_msgs::msg::CloudInfo seg_msg;
 };
 

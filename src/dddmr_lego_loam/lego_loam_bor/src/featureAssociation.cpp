@@ -97,14 +97,6 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
   RCLCPP_INFO(this->get_logger(), "featureAssociation.nearest_feature_search_distance: %.2f", nearest_dist);
 
   _nearest_feature_dist_sqr = nearest_dist*nearest_dist;
-
-  declare_parameter("featureAssociation.odom_type", rclcpp::ParameterValue(""));
-  this->get_parameter("featureAssociation.odom_type", odom_type_);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.odom_type: %s", odom_type_.c_str());
-
-  declare_parameter("featureAssociation.baselink_frame", rclcpp::ParameterValue(""));
-  this->get_parameter("featureAssociation.baselink_frame", baselink_frame_);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.baselink_frame: %s", baselink_frame_.c_str());
  
   declare_parameter("mapping.to_map_optimization", rclcpp::ParameterValue(true));
   this->get_parameter("mapping.to_map_optimization", to_map_optimization_);
@@ -115,7 +107,6 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
 
   
   first_odom_prepared_ = false;
-  got_baselink2sensor_tf_ = false;
   odom_sanity_check_ = false;
 
   rclcpp::SubscriptionOptions sub_options;
@@ -131,19 +122,6 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
 FeatureAssociation::~FeatureAssociation()
 {
   _input_channel.send({});
-}
-
-void FeatureAssociation::tfInitial(){
-
-  //@Initialize transform listener and broadcaster
-  tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  tf2Buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
-  auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
-    this->get_node_base_interface(),
-    this->get_node_timers_interface(),
-    tf_listener_group_);
-  tf2Buffer_->setCreateTimerInterface(timer_interface);
-  tfl_ = std::make_shared<tf2_ros::TransformListener>(*tf2Buffer_);
 }
 
 void FeatureAssociation::initializationValue() {
@@ -214,51 +192,20 @@ void FeatureAssociation::initializationValue() {
   frameCount = skipFrameNum;
 }
 
+void FeatureAssociation::tfInitial(){
+
+  //@Initialize transform listener and broadcaster
+  tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  tf2Buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+  auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
+    this->get_node_base_interface(),
+    this->get_node_timers_interface(),
+    tf_listener_group_);
+  tf2Buffer_->setCreateTimerInterface(timer_interface);
+  tfl_ = std::make_shared<tf2_ros::TransformListener>(*tf2Buffer_);
+}
+
 void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr odomIn){
-
-
-  if(!got_baselink2sensor_tf_){
-    try
-    {
-      geometry_msgs::msg::TransformStamped trans_b2s;
-      trans_b2s = tf2Buffer_->lookupTransform(
-          baselink_frame_, sensor_frame_, tf2::TimePointZero);
-      
-      tf2_trans_b2s_.setRotation(tf2::Quaternion(trans_b2s.transform.rotation.x, trans_b2s.transform.rotation.y, trans_b2s.transform.rotation.z, trans_b2s.transform.rotation.w));
-      tf2_trans_b2s_.setOrigin(tf2::Vector3(trans_b2s.transform.translation.x, trans_b2s.transform.translation.y, trans_b2s.transform.translation.z));
-      
-      // camera to sensor
-      tf2::Quaternion q;
-      q.setRPY(0,-1.570795,-1.570795);
-      tf2_trans_c2s_.setOrigin(tf2::Vector3(0, 0, 0));
-      tf2_trans_c2s_.setRotation(q);
-      
-      //camera to base_link/base_footprint
-      tf2_trans_c2b_.mult(tf2_trans_c2s_, tf2_trans_b2s_.inverse());
-      got_baselink2sensor_tf_= true;
-
-
-      trans_c2s_.transform.translation.x = tf2_trans_c2s_.getOrigin().x(); 
-      trans_c2s_.transform.translation.y = tf2_trans_c2s_.getOrigin().y(); 
-      trans_c2s_.transform.translation.z = tf2_trans_c2s_.getOrigin().z();
-      trans_c2s_.transform.rotation.x = tf2_trans_c2s_.getRotation().x();
-      trans_c2s_.transform.rotation.y = tf2_trans_c2s_.getRotation().y();
-      trans_c2s_.transform.rotation.z = tf2_trans_c2s_.getRotation().z();
-      trans_c2s_.transform.rotation.w = tf2_trans_c2s_.getRotation().w();
-
-      trans_c2b_.transform.translation.x = tf2_trans_c2b_.getOrigin().x(); 
-      trans_c2b_.transform.translation.y = tf2_trans_c2b_.getOrigin().y(); 
-      trans_c2b_.transform.translation.z = tf2_trans_c2b_.getOrigin().z();
-      trans_c2b_.transform.rotation.x = tf2_trans_c2b_.getRotation().x();
-      trans_c2b_.transform.rotation.y = tf2_trans_c2b_.getRotation().y();
-      trans_c2b_.transform.rotation.z = tf2_trans_c2b_.getRotation().z();
-      trans_c2b_.transform.rotation.w = tf2_trans_c2b_.getRotation().w();
-    }
-    catch (tf2::TransformException& e)
-    {
-      RCLCPP_ERROR(this->get_logger(), "Could not get footprint frame to sensor frame, did you launch a static broadcaster node for the tf between footprint to sensor?");
-    }
-  }
 
   if(odom_type_!="wheel_odometry"){
     return;
@@ -1379,7 +1326,7 @@ void FeatureAssociation::assignMappingOdometry(float (&ts)[6]){
     mappingOdometry.pose.pose.position.x = ts[3];
     mappingOdometry.pose.pose.position.y = ts[4];
     mappingOdometry.pose.pose.position.z = ts[5];
-    pubLaserOdometry->publish(mappingOdometry);
+    //pubLaserOdometry->publish(mappingOdometry);
 
     laserOdometryTrans.header.stamp = cloudHeader.stamp;
     laserOdometryTrans.transform.rotation.x = -geoQuat.y;
@@ -1390,7 +1337,7 @@ void FeatureAssociation::assignMappingOdometry(float (&ts)[6]){
     laserOdometryTrans.transform.translation.y = ts[4];
     laserOdometryTrans.transform.translation.z = ts[5];
 
-    tf_broadcaster_->sendTransform(laserOdometryTrans);
+    //tf_broadcaster_->sendTransform(laserOdometryTrans);
 }
 
 void FeatureAssociation::publishOdometryPath() {
@@ -1514,10 +1461,17 @@ void FeatureAssociation::runFeatureAssociation() {
   outlierCloud = projection.outlier_cloud;
   segmentedCloud = projection.segmented_cloud;
   segInfo = std::move(projection.seg_msg);
-  sensor_frame_ = segInfo.header.frame_id;
 
   cloudHeader = segInfo.header;
   cloudHeader.stamp = clock_->now();
+  trans_c2s_ = projection.trans_c2s;
+  trans_c2b_ = projection.trans_c2b;
+  baselink_frame_ = projection.trans_c2b.child_frame_id;
+  tf2_trans_b2s_.setOrigin(tf2::Vector3(projection.trans_b2s.transform.translation.x, 
+                              projection.trans_b2s.transform.translation.y, projection.trans_b2s.transform.translation.z));
+  tf2_trans_b2s_.setRotation(tf2::Quaternion(projection.trans_b2s.transform.rotation.x, 
+                    projection.trans_b2s.transform.rotation.y, projection.trans_b2s.transform.rotation.z, projection.trans_b2s.transform.rotation.w));
+  odom_type_ = projection.odom_type;
 
   adjustDistortion();
 

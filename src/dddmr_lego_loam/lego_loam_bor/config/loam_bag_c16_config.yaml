@@ -1,7 +1,7 @@
 bag_reader:
   ros__parameters:
     use_sim_time: true
-    bag_file_dir: "/root/dddmr_bags/weiwuyin_back_side"
+    bag_file_dir: "/root/dddmr_bags/meydan_hotel_2"
     point_cloud_topic: "/lslidar_point_cloud"
     odometry_topic: "/odom"
     skip_frame: 10
@@ -11,12 +11,13 @@ lego_loam_ip:
     use_sim_time: true
     # leishen16
     laser:
+        odom_type: "laser_odometry"         #wheel_odometry/laser_odometry 
+        baselink_frame: "base_link"  
         num_vertical_scans: 16
-        num_horizontal_scans: 2000
+        num_horizontal_scans: 1000
         ground_scan_index: 7
         vertical_angle_bottom: -15.0          # degrees
         vertical_angle_top: 15.0            # degrees
-        sensor_mount_angle: 0.0               # degrees
         scan_period: 0.1                   # seconds
 
     imageProjection:
@@ -31,12 +32,10 @@ lego_loam_fa:
     use_sim_time: true
     laser:
         num_vertical_scans: 16
-        num_horizontal_scans: 2000
+        num_horizontal_scans: 1000
         scan_period: 0.1                    # seconds
 
-    featureAssociation:
-        odom_type: "laser_odometry"         #wheel_odometry/laser_odometry 
-        baselink_frame: "base_link"                                
+    featureAssociation:                              
         edge_threshold: 0.1
         surf_threshold: 0.1
         nearest_feature_search_distance: 3.0

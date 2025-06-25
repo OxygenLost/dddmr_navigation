@@ -32,7 +32,7 @@
 using std::placeholders::_1;
 
 ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& output_channel)
-    : Node(name), _output_channel(output_channel), first_frame_processed_(0)
+    : Node(name), _output_channel(output_channel), first_frame_processed_(0), got_baselink2sensor_tf_(false)
 {
 
   //supress the no intensity found log
@@ -101,11 +101,13 @@ ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& outpu
   this->get_parameter("laser.ground_scan_index", _ground_scan_index);
   RCLCPP_INFO(this->get_logger(), "laser.ground_scan_index: %d", _ground_scan_index);
 
-  declare_parameter("laser.sensor_mount_angle", rclcpp::ParameterValue(0.0));
-  this->get_parameter("laser.sensor_mount_angle", _sensor_mount_angle);
-  RCLCPP_INFO(this->get_logger(), "laser.sensor_mount_angle: %.2f", _sensor_mount_angle);
+  declare_parameter("laser.odom_type", rclcpp::ParameterValue(""));
+  this->get_parameter("laser.odom_type", odom_type_);
+  RCLCPP_INFO(this->get_logger(), "laser.odom_type: %s", odom_type_.c_str());
 
-  _sensor_mount_angle *= DEG_TO_RAD;
+  declare_parameter("laser.baselink_frame", rclcpp::ParameterValue(""));
+  this->get_parameter("laser.baselink_frame", baselink_frame_);
+  RCLCPP_INFO(this->get_logger(), "laser.baselink_frame: %s", baselink_frame_.c_str());
   
   declare_parameter("imageProjection.maximum_detection_range", rclcpp::ParameterValue(0.0));
   this->get_parameter("imageProjection.maximum_detection_range", _maximum_detection_range);
@@ -175,9 +177,81 @@ void ImageProjection::resetParameters() {
   _seg_msg.segmented_cloud_range.assign(cloud_size, 0);
 }
 
+void ImageProjection::tfInitial(){
+
+  //@Initialize transform listener and broadcaster
+  tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  tf2Buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+  auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
+    this->get_node_base_interface(),
+    this->get_node_timers_interface(),
+    tf_listener_group_);
+  tf2Buffer_->setCreateTimerInterface(timer_interface);
+  tfl_ = std::make_shared<tf2_ros::TransformListener>(*tf2Buffer_);
+}
+
+bool ImageProjection::allEssentialTFReady(std::string sensor_frame){
+  
+  if(!got_baselink2sensor_tf_){
+    sensor_frame_ = sensor_frame;
+    try
+    {
+      trans_b2s_ = tf2Buffer_->lookupTransform(
+          baselink_frame_, sensor_frame_, tf2::TimePointZero);
+      
+      tf2_trans_b2s_.setRotation(tf2::Quaternion(trans_b2s_.transform.rotation.x, trans_b2s_.transform.rotation.y, trans_b2s_.transform.rotation.z, trans_b2s_.transform.rotation.w));
+      tf2_trans_b2s_.setOrigin(tf2::Vector3(trans_b2s_.transform.translation.x, trans_b2s_.transform.translation.y, trans_b2s_.transform.translation.z));
+      
+      tf2::Matrix3x3 m(tf2_trans_b2s_.getRotation());
+      double roll, pitch, yaw;
+      m.getRPY(roll, _sensor_mount_angle, yaw);
+
+      // camera to sensor
+      tf2::Quaternion qc2s;
+      qc2s.setRPY(0,-1.570795,-1.570795);
+      tf2_trans_c2s_.setOrigin(tf2::Vector3(0, 0, 0));
+      tf2_trans_c2s_.setRotation(qc2s);
+      
+      //camera to base_link/base_footprint
+      tf2_trans_c2b_.mult(tf2_trans_c2s_, tf2_trans_b2s_.inverse());
+      got_baselink2sensor_tf_= true;
+
+
+      trans_c2s_.transform.translation.x = tf2_trans_c2s_.getOrigin().x(); 
+      trans_c2s_.transform.translation.y = tf2_trans_c2s_.getOrigin().y(); 
+      trans_c2s_.transform.translation.z = tf2_trans_c2s_.getOrigin().z();
+      trans_c2s_.transform.rotation.x = tf2_trans_c2s_.getRotation().x();
+      trans_c2s_.transform.rotation.y = tf2_trans_c2s_.getRotation().y();
+      trans_c2s_.transform.rotation.z = tf2_trans_c2s_.getRotation().z();
+      trans_c2s_.transform.rotation.w = tf2_trans_c2s_.getRotation().w();
+      
+      trans_c2b_.child_frame_id = baselink_frame_;
+      trans_c2b_.transform.translation.x = tf2_trans_c2b_.getOrigin().x(); 
+      trans_c2b_.transform.translation.y = tf2_trans_c2b_.getOrigin().y(); 
+      trans_c2b_.transform.translation.z = tf2_trans_c2b_.getOrigin().z();
+      trans_c2b_.transform.rotation.x = tf2_trans_c2b_.getRotation().x();
+      trans_c2b_.transform.rotation.y = tf2_trans_c2b_.getRotation().y();
+      trans_c2b_.transform.rotation.z = tf2_trans_c2b_.getRotation().z();
+      trans_c2b_.transform.rotation.w = tf2_trans_c2b_.getRotation().w();
+      return true;
+    }
+    catch (tf2::TransformException& e)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Could not get footprint frame to sensor frame, did you launch a static broadcaster node for the tf between footprint to sensor?");
+      return false;
+    }
+  }
+  else{
+    return true;
+  }
+}
+
 void ImageProjection::cloudHandler(
     const sensor_msgs::msg::PointCloud2::SharedPtr laserCloudMsg){
-  // Reset parameters
+
+  if(!allEssentialTFReady(laserCloudMsg->header.frame_id))
+    return;
+
   resetParameters();
 
   // Copy and remove NAN points
@@ -187,14 +261,15 @@ void ImageProjection::cloudHandler(
   _seg_msg.header = laserCloudMsg->header;
   
   // transform tilted lidar back to horizontal
+  /*
   geometry_msgs::msg::TransformStamped trans_lidar2horizontal;
   tf2::Quaternion q;
-  q.setRPY( 0, _sensor_mount_angle*-1.0, 0);
+  q.setRPY( 0, _sensor_mount_angle*1.0, 0);
   trans_lidar2horizontal.transform.rotation.x = q.x(); trans_lidar2horizontal.transform.rotation.y = q.y();
   trans_lidar2horizontal.transform.rotation.z = q.z(); trans_lidar2horizontal.transform.rotation.w = q.w();
   Eigen::Affine3d trans_lidar2horizontal_af3 = tf2::transformToEigen(trans_lidar2horizontal);
   pcl::transformPointCloud(*_laser_cloud_in, *_laser_cloud_in, trans_lidar2horizontal_af3);
-
+  */
   findStartEndAngle();
   // Range image projection
   projectPointCloud();
@@ -312,7 +387,7 @@ void ImageProjection::groundRemoval() {
 
       // TODO: review this change
 
-      if ( (vertical_angle - _sensor_mount_angle) <= 10 * DEG_TO_RAD) {
+      if ( (vertical_angle + _sensor_mount_angle) <= 10 * DEG_TO_RAD) {
         _ground_mat(i, j) = 1;
         _ground_mat(i + 1, j) = 1;
         //x = _full_cloud->points[lowerInd].x + dX*t
@@ -583,7 +658,10 @@ void ImageProjection::publishClouds() {
   out.segmented_cloud.reset(new pcl::PointCloud<PointType>());
   out.patched_ground.reset(new pcl::PointCloud<PointType>());
   out.patched_ground_edge.reset(new pcl::PointCloud<PointType>());
-
+  out.trans_c2s = trans_c2s_;
+  out.trans_c2b = trans_c2b_;
+  out.trans_b2s = trans_b2s_;
+  out.odom_type = odom_type_;
   std::swap(out.seg_msg, _seg_msg);
   std::swap(out.outlier_cloud, _outlier_cloud);
   std::swap(out.segmented_cloud, _segmented_cloud);

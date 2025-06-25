@@ -92,10 +92,10 @@ class MapOptimization : public rclcpp::Node
           std::shared_ptr<std_srvs::srv::Empty::Response> response);
           
   void run();
+  void runWoLO();
   void publishGlobalMapThread();
   void loopClosureThread();
 
-  nav_msgs::msg::Odometry odomAftMapped;
   float _history_keyframe_fitness_score;
   float _history_keyframe_search_radius;
   
@@ -122,6 +122,7 @@ class MapOptimization : public rclcpp::Node
  private:
   
   std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
+  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
   rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr pub_key_pose_arr_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_pose_graph_;
@@ -131,7 +132,9 @@ class MapOptimization : public rclcpp::Node
   Eigen::Affine3d trans_m2ci_af3_, trans_c2s_af3_, trans_s2c_af3_, trans_c2b_af3_;
   tf2::Stamped<tf2::Transform> tf2_trans_m2ci_;
   tf2::Stamped<tf2::Transform> tf2_trans_c2s_; //camera2sensorlink
+  tf2::Stamped<tf2::Transform> tf2_trans_c2b_; //camera2baselink, calculated from FA
   std::set<std::pair<int, int>> pose_graph_;
+  geometry_msgs::msg::TransformStamped map2base_link_;
 
   gtsam::NonlinearFactorGraph gtSAMgraph;
   gtsam::Values initialEstimate;
@@ -179,9 +182,6 @@ class MapOptimization : public rclcpp::Node
   rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubSelectedCloudForLMOptimization;
 
   rclcpp::Service<std_srvs::srv::Empty>::SharedPtr srvSavePCD;
-  
-  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-  geometry_msgs::msg::TransformStamped aftMappedTrans;
   
   std::vector<pcl::PointCloud<PointType>::Ptr> surfCloudKeyFrames;
   std::vector<pcl::PointCloud<PointType>::Ptr> outlierCloudKeyFrames;

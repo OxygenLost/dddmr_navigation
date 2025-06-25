@@ -1,7 +1,6 @@
 #include "imageProjection.h"
 #include "featureAssociation.h"
 #include "mapOptimization.h"
-#include "transformFusion.h"
 #include <chrono>
 #include <functional>
 #include <memory>
@@ -118,10 +117,10 @@ int main(int argc, char** argv) {
   Channel<AssociationOut> association_out_channel(false);
   auto FA = std::make_shared<FeatureAssociation>("lego_loam_fa", projection_out_channel, association_out_channel);
   auto MO = std::make_shared<MapOptimization>("lego_loam_mo", association_out_channel);
-  auto TF = std::make_shared<TransformFusion>("lego_loam_tf");
   auto BR = std::make_shared<BagReader>();
   auto IPGE = std::make_shared<InteractivePoseGraphEditor>("interactive_pose_graph_editor", MO);
   
+  IP->tfInitial();
   FA->tfInitial();
   
   BR->icp_score_ = MO->_history_keyframe_fitness_score;
@@ -208,15 +207,10 @@ int main(int argc, char** argv) {
       nav_msgs::msg::Odometry::SharedPtr mapping_odom;
       mapping_odom = std::make_shared<nav_msgs::msg::Odometry>();
       *mapping_odom = FA->mappingOdometry;
-      TF->laserOdometryHandler(mapping_odom);
+
       if(FA_ready && cycle_cnt%BR->skip_frame_==0){
 
         MO->run();
-        nav_msgs::msg::Odometry::SharedPtr odom_aft_mapped;
-        odom_aft_mapped = std::make_shared<nav_msgs::msg::Odometry>();
-        *odom_aft_mapped = MO->odomAftMapped;
-        TF->odomAftMappedHandler(odom_aft_mapped);
-
         gettimeofday(&inloop, NULL);
         double inloop_t = inloop.tv_sec + double(inloop.tv_usec) / 1e6;
         if(inloop_t - last_global_map_pub_time > 1.0){
@@ -226,6 +220,9 @@ int main(int argc, char** argv) {
         
         MO->loopClosureThread();
         MO->groundEdgeDetectionThread();
+      }
+      else if(FA_ready){
+        MO->runWoLO();
       }
     }
     //@ calculate bag time and wall ime

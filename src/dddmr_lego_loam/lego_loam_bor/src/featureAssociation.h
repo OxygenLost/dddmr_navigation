@@ -7,7 +7,7 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/QR>
 
-// get robot frame to sensor frame tf
+// odom sanity check
 #include "tf2_ros/buffer.h"
 #include <tf2_ros/transform_listener.h>
 #include "tf2_ros/create_timer_ros.h"
@@ -27,7 +27,6 @@ class FeatureAssociation : public rclcpp::Node
   void odomHandler(const nav_msgs::msg::Odometry::SharedPtr odomIn);
   void runFeatureAssociation();
   void tfInitial();
-
   bool systemInitedLM;
   nav_msgs::msg::Odometry mappingOdometry;
   
@@ -62,11 +61,10 @@ class FeatureAssociation : public rclcpp::Node
   float _surf_threshold;
   float _nearest_feature_dist_sqr;
   std::string odom_type_;
-  std::string baselink_frame_, sensor_frame_;
+  std::string baselink_frame_;
   bool first_odom_prepared_;
   tf2::Transform tf2_trans_b2s_, tf2_first_odom_inverse_, tf2_first_odom_, tf2_trans_c2s_, tf2_trans_c2b_;
   bool to_map_optimization_;
-  bool got_baselink2sensor_tf_;
   bool odom_sanity_check_;
   
   rclcpp::TimerBase::SharedPtr timer_;
