@@ -45,6 +45,9 @@
 //optimized pcl transform
 #include "transforms.hpp"
 
+// pub map 2 camera_init
+#include "tf2_ros/static_transform_broadcaster.h"
+
 using namespace std::placeholders;
 
 // chrono_literals handles user-defined time durations (e.g. 500ms) 
@@ -117,13 +120,15 @@ class MapOptimization : public rclcpp::Node
   void copyPosesAndFrames();
 
  private:
-   
+  
+  std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
+
   rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr pub_key_pose_arr_;
   rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_pose_graph_;
   //@ relative pose between current pose and nearest key frame for initial guess to opt_icp_gn
   tf2::Transform tf2_current2closestKeyFrame_;
   //@ affine for final transformation to map when outputing pose graph
-  Eigen::Affine3d trans_m2ci_af3_, trans_c2s_af3_, trans_s2c_af3_;
+  Eigen::Affine3d trans_m2ci_af3_, trans_c2s_af3_, trans_s2c_af3_, trans_c2b_af3_;
   tf2::Stamped<tf2::Transform> tf2_trans_m2ci_;
   tf2::Stamped<tf2::Transform> tf2_trans_c2s_; //camera2sensorlink
   std::set<std::pair<int, int>> pose_graph_;

@@ -122,6 +122,8 @@ int main(int argc, char** argv) {
   auto BR = std::make_shared<BagReader>();
   auto IPGE = std::make_shared<InteractivePoseGraphEditor>("interactive_pose_graph_editor", MO);
   
+  FA->tfInitial();
+  
   BR->icp_score_ = MO->_history_keyframe_fitness_score;
   BR->history_keyframe_search_radius_ = MO->_history_keyframe_search_radius;
 

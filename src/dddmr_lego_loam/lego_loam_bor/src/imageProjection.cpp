@@ -38,8 +38,6 @@ ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& outpu
   //supress the no intensity found log
   pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
   clock_ = this->get_clock();
-  
-  tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
 
   _sub_laser_cloud = this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "lslidar_point_cloud", 2,
@@ -177,40 +175,6 @@ void ImageProjection::resetParameters() {
   _seg_msg.segmented_cloud_range.assign(cloud_size, 0);
 }
 
-void ImageProjection::tfInitial(){
-
-  //@Initialize transform listener and broadcaster
-  tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  tf2Buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
-  auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
-    this->get_node_base_interface(),
-    this->get_node_timers_interface(),
-    tf_listener_group_);
-  tf2Buffer_->setCreateTimerInterface(timer_interface);
-  tfl_ = std::make_shared<tf2_ros::TransformListener>(*tf2Buffer_);
-}
-
-void ImageProjection::pubCamera2Sensor(std::string frame_id){
-
-  geometry_msgs::msg::TransformStamped t;
-
-  t.header.stamp = clock_->now();
-  t.header.frame_id = "camera";
-  t.child_frame_id = frame_id;
-
-  t.transform.translation.x = 0;
-  t.transform.translation.y = 0;
-  t.transform.translation.z = 0;
-  tf2::Quaternion q;
-  q.setRPY(0,-1.570795,-1.570795);
-  t.transform.rotation.x = q.x();
-  t.transform.rotation.y = q.y();
-  t.transform.rotation.z = q.z();
-  t.transform.rotation.w = q.w();
-
-  tf_static_broadcaster_->sendTransform(t);
-}
-
 void ImageProjection::cloudHandler(
     const sensor_msgs::msg::PointCloud2::SharedPtr laserCloudMsg){
   // Reset parameters
@@ -230,8 +194,6 @@ void ImageProjection::cloudHandler(
   trans_lidar2horizontal.transform.rotation.z = q.z(); trans_lidar2horizontal.transform.rotation.w = q.w();
   Eigen::Affine3d trans_lidar2horizontal_af3 = tf2::transformToEigen(trans_lidar2horizontal);
   pcl::transformPointCloud(*_laser_cloud_in, *_laser_cloud_in, trans_lidar2horizontal_af3);
-  
-  pubCamera2Sensor(laserCloudMsg->header.frame_id);
 
   findStartEndAngle();
   // Range image projection

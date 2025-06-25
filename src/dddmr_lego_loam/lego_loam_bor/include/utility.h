@@ -79,6 +79,8 @@ struct AssociationOut
   pcl::PointCloud<PointType>::Ptr cloud_surf_last;
   pcl::PointCloud<PointType>::Ptr cloud_patched_ground_last;
   pcl::PointCloud<PointType>::Ptr cloud_patched_ground_edge_last;
+  geometry_msgs::msg::TransformStamped trans_c2s;
+  geometry_msgs::msg::TransformStamped trans_c2b;
   nav_msgs::msg::Odometry laser_odometry;
 };
 

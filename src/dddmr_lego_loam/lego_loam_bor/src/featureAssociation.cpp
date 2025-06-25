@@ -102,13 +102,9 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
   this->get_parameter("featureAssociation.odom_type", odom_type_);
   RCLCPP_INFO(this->get_logger(), "featureAssociation.odom_type: %s", odom_type_.c_str());
 
-  declare_parameter("featureAssociation.robot_frame", rclcpp::ParameterValue(""));
-  this->get_parameter("featureAssociation.robot_frame", robot_frame_);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.robot_frame: %s", robot_frame_.c_str());
-
-  declare_parameter("featureAssociation.sensor_frame", rclcpp::ParameterValue(""));
-  this->get_parameter("featureAssociation.sensor_frame", sensor_frame_);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.sensor_frame: %s", sensor_frame_.c_str());
+  declare_parameter("featureAssociation.baselink_frame", rclcpp::ParameterValue(""));
+  this->get_parameter("featureAssociation.baselink_frame", baselink_frame_);
+  RCLCPP_INFO(this->get_logger(), "featureAssociation.baselink_frame: %s", baselink_frame_.c_str());
  
   declare_parameter("mapping.to_map_optimization", rclcpp::ParameterValue(true));
   this->get_parameter("mapping.to_map_optimization", to_map_optimization_);
@@ -119,6 +115,8 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
 
   
   first_odom_prepared_ = false;
+  got_baselink2sensor_tf_ = false;
+  odom_sanity_check_ = false;
 
   rclcpp::SubscriptionOptions sub_options;
   sub_options.callback_group = odom_cb_group_;
@@ -126,42 +124,6 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
       "odom", rclcpp::QoS(rclcpp::KeepLast(1)).durability_volatile().best_effort(),
       std::bind(&FeatureAssociation::odomHandler, this, std::placeholders::_1), sub_options);
 
-  double sensor_roll, sensor_pitch, sensor_yaw;
-
-  declare_parameter("featureAssociation.sensor_roll", rclcpp::ParameterValue(0.0));
-  this->get_parameter("featureAssociation.sensor_roll", sensor_roll);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.sensor_roll: %.2f", sensor_roll);
-
-  declare_parameter("featureAssociation.sensor_pitch", rclcpp::ParameterValue(0.0));
-  this->get_parameter("featureAssociation.sensor_pitch", sensor_pitch);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.sensor_pitch: %.2f", sensor_pitch);
-
-  declare_parameter("featureAssociation.sensor_yaw", rclcpp::ParameterValue(0.0));
-  this->get_parameter("featureAssociation.sensor_yaw", sensor_yaw);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.sensor_yaw: %.2f", sensor_yaw);
-
-  tf2::Quaternion sensorQuaternion;
-  sensorQuaternion.setRPY(sensor_roll, sensor_pitch, sensor_yaw);
-  tf2_trans_b2s_.setRotation(sensorQuaternion);
-  RCLCPP_WARN(this->get_logger(), "Wheel odom is used, set sensor rpy: %.2f, %.2f, %.2f", sensor_roll, sensor_pitch, sensor_yaw);
-
-  double sensor_x, sensor_y, sensor_z;
-
-  declare_parameter("featureAssociation.sensor_x", rclcpp::ParameterValue(0.0));
-  this->get_parameter("featureAssociation.sensor_x", sensor_x);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.sensor_x: %.2f", sensor_x);
-
-  declare_parameter("featureAssociation.sensor_y", rclcpp::ParameterValue(0.0));
-  this->get_parameter("featureAssociation.sensor_y", sensor_y);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.sensor_y: %.2f", sensor_y);
-
-  declare_parameter("featureAssociation.sensor_z", rclcpp::ParameterValue(0.0));
-  this->get_parameter("featureAssociation.sensor_z", sensor_z);
-  RCLCPP_INFO(this->get_logger(), "featureAssociation.sensor_z: %.2f", sensor_z);
-
-  tf2_trans_b2s_.setOrigin(tf2::Vector3(sensor_x, sensor_y, sensor_z));
-  RCLCPP_WARN(this->get_logger(), "Wheel odom is used, set sensor xyz: %.2f, %.2f, %.2f", sensor_x, sensor_y, sensor_z);
-  
   initializationValue();
   timer_ = this->create_wall_timer(10ms, std::bind(&FeatureAssociation::runFeatureAssociation, this), timer_cb_group_);
 }
@@ -169,6 +131,19 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
 FeatureAssociation::~FeatureAssociation()
 {
   _input_channel.send({});
+}
+
+void FeatureAssociation::tfInitial(){
+
+  //@Initialize transform listener and broadcaster
+  tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  tf2Buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+  auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
+    this->get_node_base_interface(),
+    this->get_node_timers_interface(),
+    tf_listener_group_);
+  tf2Buffer_->setCreateTimerInterface(timer_interface);
+  tfl_ = std::make_shared<tf2_ros::TransformListener>(*tf2Buffer_);
 }
 
 void FeatureAssociation::initializationValue() {
@@ -241,6 +216,54 @@ void FeatureAssociation::initializationValue() {
 
 void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr odomIn){
 
+
+  if(!got_baselink2sensor_tf_){
+    try
+    {
+      geometry_msgs::msg::TransformStamped trans_b2s;
+      trans_b2s = tf2Buffer_->lookupTransform(
+          baselink_frame_, sensor_frame_, tf2::TimePointZero);
+      
+      tf2_trans_b2s_.setRotation(tf2::Quaternion(trans_b2s.transform.rotation.x, trans_b2s.transform.rotation.y, trans_b2s.transform.rotation.z, trans_b2s.transform.rotation.w));
+      tf2_trans_b2s_.setOrigin(tf2::Vector3(trans_b2s.transform.translation.x, trans_b2s.transform.translation.y, trans_b2s.transform.translation.z));
+      
+      // camera to sensor
+      tf2::Quaternion q;
+      q.setRPY(0,-1.570795,-1.570795);
+      tf2_trans_c2s_.setOrigin(tf2::Vector3(0, 0, 0));
+      tf2_trans_c2s_.setRotation(q);
+      
+      //camera to base_link/base_footprint
+      tf2_trans_c2b_.mult(tf2_trans_c2s_, tf2_trans_b2s_.inverse());
+      got_baselink2sensor_tf_= true;
+
+
+      trans_c2s_.transform.translation.x = tf2_trans_c2s_.getOrigin().x(); 
+      trans_c2s_.transform.translation.y = tf2_trans_c2s_.getOrigin().y(); 
+      trans_c2s_.transform.translation.z = tf2_trans_c2s_.getOrigin().z();
+      trans_c2s_.transform.rotation.x = tf2_trans_c2s_.getRotation().x();
+      trans_c2s_.transform.rotation.y = tf2_trans_c2s_.getRotation().y();
+      trans_c2s_.transform.rotation.z = tf2_trans_c2s_.getRotation().z();
+      trans_c2s_.transform.rotation.w = tf2_trans_c2s_.getRotation().w();
+
+      trans_c2b_.transform.translation.x = tf2_trans_c2b_.getOrigin().x(); 
+      trans_c2b_.transform.translation.y = tf2_trans_c2b_.getOrigin().y(); 
+      trans_c2b_.transform.translation.z = tf2_trans_c2b_.getOrigin().z();
+      trans_c2b_.transform.rotation.x = tf2_trans_c2b_.getRotation().x();
+      trans_c2b_.transform.rotation.y = tf2_trans_c2b_.getRotation().y();
+      trans_c2b_.transform.rotation.z = tf2_trans_c2b_.getRotation().z();
+      trans_c2b_.transform.rotation.w = tf2_trans_c2b_.getRotation().w();
+    }
+    catch (tf2::TransformException& e)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Could not get footprint frame to sensor frame, did you launch a static broadcaster node for the tf between footprint to sensor?");
+    }
+  }
+
+  if(odom_type_!="wheel_odometry"){
+    return;
+  }
+
   //ROS_INFO_ONCE("Recieve odom.");
   //@ If odom is not initilized with 0, we record it and then transform it
   //@ Because odom in lego loam should always start with 0
@@ -252,6 +275,22 @@ void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr od
     RCLCPP_WARN(this->get_logger(), "The first odom is record: %.2f, %.2f, %.2f", odomIn->pose.pose.position.x, odomIn->pose.pose.position.y, odomIn->pose.pose.position.z);
   }
   
+  // sanity check of odom->child_frame to base_link frame 
+  if(!odom_sanity_check_){
+    try
+    {
+      geometry_msgs::msg::TransformStamped trans_o2b;
+      trans_o2b = tf2Buffer_->lookupTransform(
+          odomIn->child_frame_id, baselink_frame_, tf2::TimePointZero);
+  
+      odom_sanity_check_= true;
+    }
+    catch (tf2::TransformException& e)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Could not get %s to %s, check your odom topic and baselink_frame", odomIn->child_frame_id.c_str(), baselink_frame_.c_str());
+    }
+  }
+
   tf2::Transform tf2_trans_o2b;
   tf2_trans_o2b.setOrigin(tf2::Vector3(odomIn->pose.pose.position.x, odomIn->pose.pose.position.y, odomIn->pose.pose.position.z));
   tf2_trans_o2b.setRotation(tf2::Quaternion(odomIn->pose.pose.orientation.x, odomIn->pose.pose.orientation.y, odomIn->pose.pose.orientation.z, odomIn->pose.pose.orientation.w));
@@ -1475,6 +1514,7 @@ void FeatureAssociation::runFeatureAssociation() {
   outlierCloud = projection.outlier_cloud;
   segmentedCloud = projection.segmented_cloud;
   segInfo = std::move(projection.seg_msg);
+  sensor_frame_ = segInfo.header.frame_id;
 
   cloudHeader = segInfo.header;
   cloudHeader.stamp = clock_->now();
@@ -1528,7 +1568,9 @@ void FeatureAssociation::runFeatureAssociation() {
     out.cloud_patched_ground_edge_last = projection.patched_ground_edge;
 
     out.laser_odometry = mappingOdometry;
-    
+    out.trans_c2s = trans_c2s_;
+    out.trans_c2b = trans_c2b_;
+
     _output_channel.send(std::move(out));
   }
   

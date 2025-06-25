@@ -34,6 +34,7 @@ int main(int argc, char** argv) {
   executor.add_node(MO);
   executor.add_node(TF);
   executor.add_node(IPGE);
+  FA->tfInitial();
   executor.spin();
   rclcpp::shutdown();
 

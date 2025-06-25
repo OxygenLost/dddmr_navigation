@@ -10,10 +10,6 @@
 
 // pub camera to sensor frame
 #include "tf2_ros/static_transform_broadcaster.h"
-// get robot frame to sensor frame tf
-#include "tf2_ros/buffer.h"
-#include <tf2_ros/transform_listener.h>
-#include "tf2_ros/create_timer_ros.h"
 
 class ImageProjection : public rclcpp::Node 
 {
@@ -24,20 +20,11 @@ class ImageProjection : public rclcpp::Node
     ~ImageProjection() = default;
     
     void cloudHandler(const sensor_msgs::msg::PointCloud2::SharedPtr msg);
-    void tfInitial();
 
   private:
 
     rclcpp::Clock::SharedPtr clock_;
-    rclcpp::CallbackGroup::SharedPtr tf_listener_group_;
 
-    std::shared_ptr<tf2_ros::TransformListener> tfl_;
-    std::shared_ptr<tf2_ros::Buffer> tf2Buffer_;  ///< @brief Used for transforming point clouds
-
-
-    std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
-
-    void pubCamera2Sensor(std::string frame_id);
     void findStartEndAngle();
     void resetParameters();
     void projectPointCloud();
@@ -97,6 +84,7 @@ class ImageProjection : public rclcpp::Node
     float _minimum_detection_range;
     double distance_for_patch_between_rings_;
     int first_frame_processed_;
+
 };
 
 
