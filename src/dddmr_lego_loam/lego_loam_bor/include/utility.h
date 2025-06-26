@@ -87,6 +87,7 @@ struct AssociationOut
   geometry_msgs::msg::TransformStamped trans_c2b;
   nav_msgs::msg::Odometry laser_odometry; //in the lego_loam definition frame
   nav_msgs::msg::Odometry wheel_odometry; //wheel odom, odom->baselink frame
+  bool broadcast_odom_tf;
 };
 
 inline void OdometryToTransform(const nav_msgs::msg::Odometry& odometry,

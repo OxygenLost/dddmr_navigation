@@ -48,6 +48,7 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
   odom_topic_alive_ = false;
   odom_tf_alive_ = false;
   odom_tf_detect_number_ = 0;
+
   //@ this cloud is for localization, therefore, we need good QoS
   pubCornerPointsSharp = this->create_publisher<sensor_msgs::msg::PointCloud2>
       ("laser_cloud_sharp", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
@@ -213,7 +214,7 @@ void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr od
   
   odom_topic_alive_ = true;
 
-  if(!odom_tf_alive_ && odom_tf_detect_number_<5){
+  if(!odom_tf_alive_ && odom_tf_detect_number_<2){
     try
     {
       geometry_msgs::msg::TransformStamped trans_o2b;
@@ -228,7 +229,7 @@ void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr od
     odom_tf_detect_number_++;
   }
 
-  
+  wheelOdometry = (*odomIn);
   if(odom_type_!="wheel_odometry"){
     return;
   }
@@ -1497,6 +1498,11 @@ void FeatureAssociation::runFeatureAssociation() {
   
   if(!initialize_laser_odom_at_first_frame_){
 
+    //@ inital default value
+    wheelOdometry.pose.pose.orientation.w = 1.0;
+    wheelOdometry.header.frame_id = "odom";
+    wheelOdometry.child_frame_id = baselink_frame_;
+
     tf2::Matrix3x3 m(tf2_trans_b2s_.getRotation());
     double roll, pitch, yaw;
     m.getRPY(roll, pitch, yaw);
@@ -1555,7 +1561,8 @@ void FeatureAssociation::runFeatureAssociation() {
     out.laser_odometry = mappingOdometry;
     out.trans_c2s = trans_c2s_;
     out.trans_c2b = trans_c2b_;
-
+    out.wheel_odometry = wheelOdometry;
+    out.broadcast_odom_tf = !odom_tf_alive_;
     _output_channel.send(std::move(out));
   }
   

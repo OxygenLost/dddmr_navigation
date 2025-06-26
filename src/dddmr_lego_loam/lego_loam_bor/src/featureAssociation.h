@@ -29,6 +29,7 @@ class FeatureAssociation : public rclcpp::Node
   void tfInitial();
   bool systemInitedLM;
   nav_msgs::msg::Odometry mappingOdometry;
+  nav_msgs::msg::Odometry wheelOdometry;
   
  private:
 

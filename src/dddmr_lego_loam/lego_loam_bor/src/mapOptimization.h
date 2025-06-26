@@ -118,6 +118,8 @@ class MapOptimization : public rclcpp::Node
   void publishKeyPosesAndFrames();
   void groundEdgeDetectionThread();
   void copyPosesAndFrames();
+  
+  nav_msgs::msg::Odometry wheelOdometry;
 
  private:
   
@@ -362,6 +364,7 @@ class MapOptimization : public rclcpp::Node
   int ground_edge_threshold_num_;
 
   std::vector<bool> ground_edge_processed_;
+  bool broadcast_odom_tf_;
 
 };
 
