@@ -104,7 +104,7 @@ ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& outpu
   declare_parameter("laser.odom_type", rclcpp::ParameterValue(""));
   this->get_parameter("laser.odom_type", odom_type_);
   RCLCPP_INFO(this->get_logger(), "laser.odom_type: %s", odom_type_.c_str());
-
+  
   declare_parameter("laser.baselink_frame", rclcpp::ParameterValue(""));
   this->get_parameter("laser.baselink_frame", baselink_frame_);
   RCLCPP_INFO(this->get_logger(), "laser.baselink_frame: %s", baselink_frame_.c_str());

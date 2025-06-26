@@ -44,6 +44,10 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
       _input_channel(input_channel),
       _output_channel(output_channel){
   
+  initialize_laser_odom_at_first_frame_ = false;
+  odom_topic_alive_ = false;
+  odom_tf_alive_ = false;
+  odom_tf_detect_number_ = 0;
   //@ this cloud is for localization, therefore, we need good QoS
   pubCornerPointsSharp = this->create_publisher<sensor_msgs::msg::PointCloud2>
       ("laser_cloud_sharp", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
@@ -206,7 +210,25 @@ void FeatureAssociation::tfInitial(){
 }
 
 void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr odomIn){
+  
+  odom_topic_alive_ = true;
 
+  if(!odom_tf_alive_ && odom_tf_detect_number_<5){
+    try
+    {
+      geometry_msgs::msg::TransformStamped trans_o2b;
+      trans_o2b = tf2Buffer_->lookupTransform(
+          odomIn->header.frame_id, odomIn->child_frame_id, tf2::TimePointZero);
+      odom_tf_alive_ = true;
+    }
+    catch (tf2::TransformException& e)
+    {
+      RCLCPP_ERROR(this->get_logger(), "Could not get %s to %s, check your odom topic and baselink_frame", odomIn->child_frame_id.c_str(), baselink_frame_.c_str());
+    }
+    odom_tf_detect_number_++;
+  }
+
+  
   if(odom_type_!="wheel_odometry"){
     return;
   }
@@ -256,10 +278,10 @@ void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr od
   transformWheelOdometrySum[0] = pitch;
   transformWheelOdometrySum[1] = yaw;
   transformWheelOdometrySum[2] = roll;
-  transformWheelOdometrySum[3] = odomIn->pose.pose.position.y * -1.0;
+  transformWheelOdometrySum[3] = odomIn->pose.pose.position.y;
   transformWheelOdometrySum[4] = odomIn->pose.pose.position.z;
-  transformWheelOdometrySum[5] = odomIn->pose.pose.position.x * -1.0;
-
+  transformWheelOdometrySum[5] = odomIn->pose.pose.position.x;
+  
   //RCLCPP_WARN(this->get_logger(), "%.2f, %.2f, %.2f <> %.2f, %.2f, %.2f", roll, pitch, yaw, odomIn->pose.pose.position.x, odomIn->pose.pose.position.y, odomIn->pose.pose.position.z);
 }
 
@@ -1472,7 +1494,16 @@ void FeatureAssociation::runFeatureAssociation() {
   tf2_trans_b2s_.setRotation(tf2::Quaternion(projection.trans_b2s.transform.rotation.x, 
                     projection.trans_b2s.transform.rotation.y, projection.trans_b2s.transform.rotation.z, projection.trans_b2s.transform.rotation.w));
   odom_type_ = projection.odom_type;
+  
+  if(!initialize_laser_odom_at_first_frame_){
 
+    tf2::Matrix3x3 m(tf2_trans_b2s_.getRotation());
+    double roll, pitch, yaw;
+    m.getRPY(roll, pitch, yaw);
+    // handle pitch at this stage
+    transformLaserOdometrySum[0] = pitch;
+    initialize_laser_odom_at_first_frame_ = true;
+  }
   adjustDistortion();
 
   calculateSmoothness();
@@ -1499,7 +1530,7 @@ void FeatureAssociation::runFeatureAssociation() {
     assignMappingOdometry(transformWheelOdometrySum);
   }
 
-  publishOdometryPath();
+  //publishOdometryPath();
 
   
   if (to_map_optimization_) {

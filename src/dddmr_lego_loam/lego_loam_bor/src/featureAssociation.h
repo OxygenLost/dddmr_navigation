@@ -171,7 +171,10 @@ class FeatureAssociation : public rclcpp::Node
   nav_msgs::msg::Path laser_odom_path_, wheel_odom_path_;
   geometry_msgs::msg::TransformStamped trans_c2s_;
   geometry_msgs::msg::TransformStamped trans_c2b_;
-
+  bool initialize_laser_odom_at_first_frame_;
+  bool odom_topic_alive_;
+  bool odom_tf_alive_;
+  int odom_tf_detect_number_;
 };
 
 #endif // FEATUREASSOCIATION_H
