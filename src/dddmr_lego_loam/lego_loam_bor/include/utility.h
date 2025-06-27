@@ -73,6 +73,9 @@ struct ProjectionOut
   geometry_msgs::msg::TransformStamped trans_c2b;
   geometry_msgs::msg::TransformStamped trans_b2s;
   cloud_msgs::msg::CloudInfo seg_msg;
+  int vertical_scans;
+  int horizontal_scans;
+  double scan_period;
 };
 
 

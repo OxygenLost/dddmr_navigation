@@ -76,18 +76,6 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
   clock_ = this->get_clock();
 
-  declare_parameter("laser.num_vertical_scans", rclcpp::ParameterValue(0));
-  this->get_parameter("laser.num_vertical_scans", _vertical_scans);
-  RCLCPP_INFO(this->get_logger(), "laser.num_vertical_scans: %d", _vertical_scans);
-
-  declare_parameter("laser.num_horizontal_scans", rclcpp::ParameterValue(0));
-  this->get_parameter("laser.num_horizontal_scans", _horizontal_scans);
-  RCLCPP_INFO(this->get_logger(), "laser.num_horizontal_scans: %d", _horizontal_scans);
-
-  declare_parameter("laser.scan_period", rclcpp::ParameterValue(0.0));
-  this->get_parameter("laser.scan_period", _scan_period);
-  RCLCPP_INFO(this->get_logger(), "laser.scan_period: %.2f", _scan_period);
-
   declare_parameter("featureAssociation.edge_threshold", rclcpp::ParameterValue(0.0));
   this->get_parameter("featureAssociation.edge_threshold", _edge_threshold);
   RCLCPP_INFO(this->get_logger(), "featureAssociation.edge_threshold: %.2f", _edge_threshold);
@@ -120,7 +108,7 @@ FeatureAssociation::FeatureAssociation(std::string name, Channel<ProjectionOut> 
       "odom", rclcpp::QoS(rclcpp::KeepLast(1)).durability_volatile().best_effort(),
       std::bind(&FeatureAssociation::odomHandler, this, std::placeholders::_1), sub_options);
 
-  initializationValue();
+  //initializationValue();
   timer_ = this->create_wall_timer(10ms, std::bind(&FeatureAssociation::runFeatureAssociation, this), timer_cb_group_);
 }
 
@@ -1495,8 +1483,13 @@ void FeatureAssociation::runFeatureAssociation() {
   tf2_trans_b2s_.setRotation(tf2::Quaternion(projection.trans_b2s.transform.rotation.x, 
                     projection.trans_b2s.transform.rotation.y, projection.trans_b2s.transform.rotation.z, projection.trans_b2s.transform.rotation.w));
   odom_type_ = projection.odom_type;
-  
+
   if(!initialize_laser_odom_at_first_frame_){
+
+    _vertical_scans = projection.vertical_scans;
+    _horizontal_scans = projection.horizontal_scans;
+    _scan_period = projection.scan_period;  
+    initializationValue();
 
     //@ inital default value
     wheelOdometry.pose.pose.orientation.w = 1.0;
@@ -1509,6 +1502,7 @@ void FeatureAssociation::runFeatureAssociation() {
     // handle pitch at this stage
     transformLaserOdometrySum[0] = pitch;
     initialize_laser_odom_at_first_frame_ = true;
+    return;
   }
   adjustDistortion();
 

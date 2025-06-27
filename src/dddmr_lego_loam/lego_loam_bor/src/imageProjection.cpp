@@ -68,7 +68,11 @@ ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& outpu
   declare_parameter("laser.num_horizontal_scans", rclcpp::ParameterValue(0));
   this->get_parameter("laser.num_horizontal_scans", _horizontal_scans);
   RCLCPP_INFO(this->get_logger(), "laser.num_horizontal_scans: %d", _horizontal_scans);
-
+  
+  declare_parameter("laser.scan_period", rclcpp::ParameterValue(0.1));
+  this->get_parameter("laser.scan_period", _scan_period);
+  RCLCPP_INFO(this->get_logger(), "laser.scan_period: %d", _scan_period);
+  
   declare_parameter("laser.vertical_angle_bottom", rclcpp::ParameterValue(0.0));
   this->get_parameter("laser.vertical_angle_bottom", _ang_bottom);
   RCLCPP_INFO(this->get_logger(), "laser.vertical_angle_bottom: %.2f", _ang_bottom);
@@ -662,6 +666,10 @@ void ImageProjection::publishClouds() {
   out.trans_c2b = trans_c2b_;
   out.trans_b2s = trans_b2s_;
   out.odom_type = odom_type_;
+  out.vertical_scans = _vertical_scans;
+  out.horizontal_scans = _horizontal_scans;
+  out.scan_period = _scan_period;
+
   std::swap(out.seg_msg, _seg_msg);
   std::swap(out.outlier_cloud, _outlier_cloud);
   std::swap(out.segmented_cloud, _segmented_cloud);

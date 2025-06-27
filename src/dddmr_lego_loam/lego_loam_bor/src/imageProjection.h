@@ -57,6 +57,7 @@ class ImageProjection : public rclcpp::Node
 
     int _vertical_scans;
     int _horizontal_scans;
+    double _scan_period;
     float _ang_bottom;
     float _ang_resolution_X;
     float _ang_resolution_Y;

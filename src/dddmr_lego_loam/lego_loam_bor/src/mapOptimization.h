@@ -136,7 +136,6 @@ class MapOptimization : public rclcpp::Node
   tf2::Stamped<tf2::Transform> tf2_trans_c2s_; //camera2sensorlink
   tf2::Stamped<tf2::Transform> tf2_trans_c2b_; //camera2baselink, calculated from FA
   std::set<std::pair<int, int>> pose_graph_;
-  geometry_msgs::msg::TransformStamped map2base_link_;
 
   gtsam::NonlinearFactorGraph gtSAMgraph;
   gtsam::Values initialEstimate;

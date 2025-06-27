@@ -30,11 +30,6 @@ lego_loam_ip:
 lego_loam_fa:
   ros__parameters:
     use_sim_time: true
-    laser:
-        num_vertical_scans: 16
-        num_horizontal_scans: 1000
-        scan_period: 0.1                    # seconds
-
     featureAssociation:                              
         edge_threshold: 0.1
         surf_threshold: 0.1

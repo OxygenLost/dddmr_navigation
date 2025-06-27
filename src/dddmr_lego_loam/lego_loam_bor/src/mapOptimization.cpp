@@ -705,18 +705,6 @@ void MapOptimization::publishTF() {
     odom2baselink.transform.translation.z = wheelOdometry.pose.pose.position.z;
     tf_broadcaster_->sendTransform(odom2baselink);
   }
-  /*
-  map2base_link_.header.frame_id = "map";
-  map2base_link_.header.stamp = clock_->now();
-  map2base_link_.transform.rotation.x = tf2_trans_m2b.getRotation().x();
-  map2base_link_.transform.rotation.y = tf2_trans_m2b.getRotation().y();
-  map2base_link_.transform.rotation.z = tf2_trans_m2b.getRotation().z();
-  map2base_link_.transform.rotation.w = tf2_trans_m2b.getRotation().w();
-  map2base_link_.transform.translation.x = tf2_trans_m2b.getOrigin().x();
-  map2base_link_.transform.translation.y = tf2_trans_m2b.getOrigin().y();
-  map2base_link_.transform.translation.z = tf2_trans_m2b.getOrigin().z();
-  tf_broadcaster_->sendTransform(map2base_link_);
-  */
 }
 
 void MapOptimization::publishKeyPosesAndFrames() {
@@ -2010,8 +1998,9 @@ void MapOptimization::run() {
   tf2_trans_c2s_.setOrigin(tf2::Vector3(association.trans_c2s.transform.translation.x, association.trans_c2s.transform.translation.y, association.trans_c2s.transform.translation.z));
   tf2_trans_c2b_.setRotation(tf2::Quaternion(association.trans_c2b.transform.rotation.x, association.trans_c2b.transform.rotation.y, association.trans_c2b.transform.rotation.z, association.trans_c2b.transform.rotation.w));
   tf2_trans_c2b_.setOrigin(tf2::Vector3(association.trans_c2b.transform.translation.x, association.trans_c2b.transform.translation.y, association.trans_c2b.transform.translation.z));
-  map2base_link_.child_frame_id = association.trans_c2b.child_frame_id;
-
+  wheelOdometry = association.wheel_odometry;
+  broadcast_odom_tf_ = association.broadcast_odom_tf;
+  
   OdometryToTransform(laser_odometry, transformSum);
 
   transformAssociateToMap();
@@ -2059,7 +2048,6 @@ void MapOptimization::runWoLO(){
   tf2_trans_c2s_.setOrigin(tf2::Vector3(association.trans_c2s.transform.translation.x, association.trans_c2s.transform.translation.y, association.trans_c2s.transform.translation.z));
   tf2_trans_c2b_.setRotation(tf2::Quaternion(association.trans_c2b.transform.rotation.x, association.trans_c2b.transform.rotation.y, association.trans_c2b.transform.rotation.z, association.trans_c2b.transform.rotation.w));
   tf2_trans_c2b_.setOrigin(tf2::Vector3(association.trans_c2b.transform.translation.x, association.trans_c2b.transform.translation.y, association.trans_c2b.transform.translation.z));
-  map2base_link_.child_frame_id = association.trans_c2b.child_frame_id;
   wheelOdometry = association.wheel_odometry;
   broadcast_odom_tf_ = association.broadcast_odom_tf;
 

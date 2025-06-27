@@ -57,7 +57,7 @@ class FeatureAssociation : public rclcpp::Node
 
   int _vertical_scans;
   int _horizontal_scans;
-  float _scan_period;
+  double _scan_period;
   float _edge_threshold;
   float _surf_threshold;
   float _nearest_feature_dist_sqr;
