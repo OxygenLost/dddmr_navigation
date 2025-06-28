@@ -22,7 +22,22 @@ The following features are provided and are different from original version:
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/legoloam_weiwuyin.png" width="700" height="320"/>
 </p>
 
-## RUN The Demo
+## Cite *LeGO-LOAM*
+
+Many thanks to *LeGO-LOAM* paper: 
+```
+@inproceedings{legoloam2018,
+  title={LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain},
+  author={Tixiao Shan and Brendan Englot},
+  booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages={4758-4765},
+  year={2018},
+  organization={IEEE}
+}
+```
+
+<details><summary><h2>💡 Click me to see DDDMR LeGO-LOAM Demo</h2></summary>
+
 ### 1. Create docker image
 > [!NOTE]
 > The package runs in the docker, so we need to build the image first. We support both x64 with or without GPU and arm64 (tested in nvidia jetson jpack6.2).
@@ -61,26 +76,18 @@ In the Rviz2, click resume to start mapping, and change the parameter accordingl
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/interactive_mapping_panel.png" width="700" height="420"/>
 </p>
 
+</details>
+
+
+<details><summary><h2>💡 Click me to see Pose Graph Editor Demo</h2></summary>
+    
+# Pose Graph Editor Tutorial
 #### Play pose graph editor in docker container
 ```
 cd ~/dddmr_navigation && source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
 source install/setup.bash
 ros2 launch lego_loam_bor pose_graph_editor.launch
 ```
-## Cite *LeGO-LOAM*
-
-Many thanks to *LeGO-LOAM* paper: 
-```
-@inproceedings{legoloam2018,
-  title={LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain},
-  author={Tixiao Shan and Brendan Englot},
-  booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
-  pages={4758-4765},
-  year={2018},
-  organization={IEEE}
-}
-```
-# Pose Graph Editor Tutorial
 ## Edit the First Pose Graph
 ### Open a pose graph folder
 <p align="center">
@@ -103,7 +110,7 @@ Select a pose without pressing any key, the selected key frame will be green
 
 ### Use ICP to find an edge between the first key frame and the second key frame
 
-The buttons px+, px-, py+, py-, .... are used to fine tune the icp result. When the result is satisfied, click "Accept", an edge will be added
+Use buttons px+, px-, py+, py-, to move the second key frame to match the first frame, and then click ICP to optimize two keyframes transform. If the result is satisfied, click "Accept", an edge will be added
 <p align="center">
 <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/icp.gif" width="600" height="280"/>
 </p>
@@ -134,3 +141,5 @@ Steps:
 #### Check the demo video:
 
 [![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/merge_yt.png)](https://www.youtube.com/watch?v=7zyrRIE7eaU)
+
+</details>
