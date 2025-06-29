@@ -213,6 +213,7 @@ void DDSimpleTrajectoryGeneratorTheory::onInitialize(){
   params_->cuboid.push_back(pt_flt);
   params_->cuboid.push_back(pt_frb);
   //@ push the point by following sequence, because when doing the point in cuboid test we leverage blb/brb/blt/flb
+  //@ back left top = blt; back right bottom = brb;
   //
   //          -------
   //         /|    /|

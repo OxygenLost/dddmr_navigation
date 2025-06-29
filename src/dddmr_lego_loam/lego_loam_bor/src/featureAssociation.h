@@ -7,6 +7,11 @@
 #include <Eigen/Eigenvalues>
 #include <Eigen/QR>
 
+// odom sanity check
+#include "tf2_ros/buffer.h"
+#include <tf2_ros/transform_listener.h>
+#include "tf2_ros/create_timer_ros.h"
+
 // chrono_literals handles user-defined time durations (e.g. 500ms) 
 using namespace std::chrono_literals;
 
@@ -21,11 +26,17 @@ class FeatureAssociation : public rclcpp::Node
 
   void odomHandler(const nav_msgs::msg::Odometry::SharedPtr odomIn);
   void runFeatureAssociation();
-  
+  void tfInitial();
   bool systemInitedLM;
   nav_msgs::msg::Odometry mappingOdometry;
+  nav_msgs::msg::Odometry wheelOdometry;
   
  private:
+
+  rclcpp::CallbackGroup::SharedPtr tf_listener_group_;
+
+  std::shared_ptr<tf2_ros::TransformListener> tfl_;
+  std::shared_ptr<tf2_ros::Buffer> tf2Buffer_;  ///< @brief Used for transforming point clouds
 
   Channel<ProjectionOut>& _input_channel;
   Channel<AssociationOut>& _output_channel;
@@ -46,16 +57,16 @@ class FeatureAssociation : public rclcpp::Node
 
   int _vertical_scans;
   int _horizontal_scans;
-  float _scan_period;
+  double _scan_period;
   float _edge_threshold;
   float _surf_threshold;
   float _nearest_feature_dist_sqr;
   std::string odom_type_;
-  std::string robot_frame_, sensor_frame_;
+  std::string baselink_frame_;
   bool first_odom_prepared_;
-  tf2::Transform tf2_trans_b2s_, tf2_first_odom_inverse_, tf2_first_odom_;
+  tf2::Transform tf2_trans_b2s_, tf2_first_odom_inverse_, tf2_first_odom_, tf2_trans_c2s_, tf2_trans_c2b_;
   bool to_map_optimization_;
-  double sensor_z_;
+  bool odom_sanity_check_;
   
   rclcpp::TimerBase::SharedPtr timer_;
   rclcpp::Clock::SharedPtr clock_;
@@ -159,7 +170,12 @@ class FeatureAssociation : public rclcpp::Node
   
   void assignMappingOdometry(float (&ts)[6]);
   nav_msgs::msg::Path laser_odom_path_, wheel_odom_path_;
-
+  geometry_msgs::msg::TransformStamped trans_c2s_;
+  geometry_msgs::msg::TransformStamped trans_c2b_;
+  bool initialize_laser_odom_at_first_frame_;
+  bool odom_topic_alive_;
+  bool odom_tf_alive_;
+  int odom_tf_detect_number_;
 };
 
 #endif // FEATUREASSOCIATION_H

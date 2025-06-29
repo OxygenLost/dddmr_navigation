@@ -108,18 +108,6 @@ ament_target_dependencies(map_optimization
   ${dependencies}
 )
 
-#lego loam tf
-add_library(transform_fusion SHARED
-  src/transformFusion.cpp
-)
-target_link_libraries(transform_fusion
-  ${PCL_LIBRARIES}
-  ${GTSAM_LIBRARIES}
-)
-ament_target_dependencies(transform_fusion
-  ${dependencies}
-)
-
 #pose graph editing
 add_library(pose_graph_editor SHARED
   src/pose_graph_editor/pose_graph_editor.cpp
@@ -180,7 +168,6 @@ target_link_libraries(lego_loam_bag
   image_projection
   feature_association
   map_optimization
-  transform_fusion
   gtsam
 )
 ament_target_dependencies(lego_loam_bag
@@ -196,7 +183,6 @@ target_link_libraries(lego_loam
   image_projection
   feature_association
   map_optimization
-  transform_fusion
   gtsam
 )
 ament_target_dependencies(lego_loam
@@ -243,7 +229,6 @@ install(TARGETS
   image_projection
   feature_association
   map_optimization
-  transform_fusion
   pose_graph_editor
   interactive_pose_graph_editor
   ARCHIVE DESTINATION lib
@@ -275,6 +260,6 @@ install(DIRECTORY
 )
 
 ament_export_include_directories(include)
-ament_export_libraries(opt_icp_gn image_projection feature_association map_optimization transform_fusion pose_graph_editor interactive_pose_graph_editor)
+ament_export_libraries(opt_icp_gn image_projection feature_association map_optimization pose_graph_editor interactive_pose_graph_editor)
 ament_export_dependencies(${dependencies})
 ament_package()
