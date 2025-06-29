@@ -22,6 +22,23 @@ The following features are provided and are different from original version:
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/legoloam_weiwuyin.png" width="700" height="320"/>
 </p>
 
+## LeGO LOAM with a tilted lidar
+
+SLAM with a tilted lidar is supported, the static tf broadcaster should be setup:
+<table align='center'>
+  <tr width="100%">
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/lidar_tilt_10deg.png" width="420" height="260"/><p align='center'>Lidar tilt 10 degree and rotate 180 deg at the yaw direction</p></td>
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/lidar_no_tilt.png" width="420" height="260"/><p align='center'>Lidar with no tilting and rotate 180 deg at the yaw direction</p></td>
+  </tr>
+</table>
+
+If your baselink is not on the ground, you can setup a base_footprint to connect the base_link, and control the robot at base_footprint frame.
+<table align='center'>
+  <tr width="100%">
+    <td><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/lidar_link_footprint.png" width="420" height="260"/><p align='center'>Map1+2</p></td>
+  </tr>
+</table>
+
 ## Cite *LeGO-LOAM*
 
 Many thanks to *LeGO-LOAM* paper: 
