@@ -157,6 +157,6 @@ Steps:
 
 #### Check the demo video:
 
-[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/merge_yt.png)](https://www.youtube.com/watch?v=7zyrRIE7eaU)
+[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/pose_graph_editor/merge_yt.png)](https://www.youtube.com/watch?v=QKRoJy30-ds)
 
 </details>
