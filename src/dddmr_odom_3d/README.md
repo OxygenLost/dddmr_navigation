@@ -2,7 +2,7 @@
 This package demonstrates a simple example of 3D odometry calculation and visualization for a differential-drive or skid-steer robot extended into 3D space. The goal is to help users understand how to use Euler angles and velocity for odometry calculation.
 
 <p align='center'>
-    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/odom_3d/Differential_drive_robot_3D_odometry_approximation.png" width="780" height="560"/>
+    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/odom_3d/Differential_drive_robot_3D_odometry_approximation.png" width="520" height="620"/>
 </p>
 
 > [!CAUTION]
@@ -11,7 +11,7 @@ This package demonstrates a simple example of 3D odometry calculation and visual
 > - IMU orientation must be well-filtered. Raw noisy IMU data will lead to very inaccurate position estimates.
 
 ## Demo
-This example explains how to combine 2D odometry data (linear and angular velocity) with IMU-provided Euler angles (roll, pitch, yaw) to approximate 3D odometry.
+This demo plays a bag with 2D odometry and IMU Euler angles to generate 3D odometry topic.
 ### 1. Create docker image
 > [!NOTE]
 > The package runs in the docker, so we need to build the image first. We support both x64 with or without GPU and arm64 (tested in nvidia jetson jpack6.2).
