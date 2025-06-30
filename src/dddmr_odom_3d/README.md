@@ -2,7 +2,7 @@
 This package demonstrates a simple example of 3D odometry calculation and visualization for a differential-drive or skid-steer robot extended into 3D space. The goal is to help users understand how to use Euler angles and velocity for odometry calculation.
 
 <p align='center'>
-    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/odom_3d/Differential_drive_robot_3D_odometry_approximation.png" width="520" height="620"/>
+    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/odom_3d/Differential_drive_robot_3D_odometry_approximation_.png" width="520" height="620"/>
 </p>
 
 > [!CAUTION]
