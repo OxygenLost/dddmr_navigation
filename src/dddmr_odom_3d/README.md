@@ -7,7 +7,7 @@ This package demonstrates a simple example of 3D odometry calculation and visual
 
 > [!CAUTION]
 > - This is a 3D odometry example only. For production use, much finer considerations are required, including synchronization, data fusion, and robust filtering.
-> - This example does not account for lateral (Y-axis) or vertical (Z-axis) control input. It assumes no commanded slip or lift. It just integrates forward motion on X, while pitch affects the vertical component.
+> - This example does not account for lateral (Y-axis) control input. It assumes no wheel sliping or lifting. It just integrates forward motion on X, while pitch affects the vertical component.
 > - IMU orientation must be well-filtered. Raw noisy IMU data will lead to very inaccurate position estimates.
 
 ## Demo
@@ -35,7 +35,9 @@ cd ~/dddmr_navigation && source /opt/ros/humble/setup.bash && colcon build --sym
 source install/setup.bash
 ros2 launch dddmr_odom_3d example_odom_3d_launch.py
 ```
+
+The odom_3d_example node will fuse 2D odometry and IMU to 3D odometry. 
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/odom_3d/3d_odom_demo.gif" width="700" height="420"/>
 </p>
-In Rviz2, you will see the base_link moving up and down along the slope.
+
