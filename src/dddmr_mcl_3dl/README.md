@@ -31,7 +31,6 @@ The package runs in the docker, so we need to build the image first. We support 
 ```
 cd ~
 git clone https://github.com/dfl-rlab/dddmr_navigation.git
-cd ~/dddmr_navigation && git submodule update --init dddmr_docker src/dddmr_mcl_3dl src/dddmr_rviz_tools src/dddmr_lego_loam_bor
 cd ~/dddmr_navigation/dddmr_docker/docker_file && ./build.bash
 ```
 ### 2. Download essential files
