@@ -135,5 +135,8 @@ The perception_3d plugins will load the point clouds and make them as the speed 
 
 Check out the configure: [speed_layer_configuration](https://github.com/dfl-rlab/dddmr_navigation/blob/main/src/dddmr_perception_3d/config/speed_limit_layer.yaml)
 
-Also check out the demo video:
+Also you can play around the utils:
+```
+ros2 launch perception_3d zone_editor_utils.launch 
+```
 [![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/perception_3d/point_cloud_editor.png)](https://youtu.be/DHgzRD4HrjU)
