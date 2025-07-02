@@ -21,7 +21,7 @@ Perception 3D:
   - [x] Speed limit layer
   - [x] No enter layer
 
-## Multilayer Lidar Demo (Leishen Lidar C16)
+## Obstacles Marking and Clearing - Multilayer Lidar (Leishen Lidar C16)
 
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/perception_3d/multilayer_lidar_demo.gif" width="640" height="400"/>
@@ -57,7 +57,7 @@ ros2 launch perception_3d multilayer_spinning_lidar_3d_ros_launch.py
 ```
 </details>
 
-## Multiple Depth Cameras Demo (Realsense D455)
+## Obstacles Marking and Clearing - Multiple Depth Cameras(Realsense D455)
 
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/perception_3d/multi_depth_camera_demo.gif" width="640" height="400"/>
@@ -93,7 +93,7 @@ ros2 launch perception_3d multi_depth_camera_3d_ros_launch.py
 ```
 </details>
 
-## Scanning Lidar Demo (Unitree G4)
+## Obstacles Marking and Clearing - Scanning Lidar (Unitree G4)
 
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/perception_3d/scanning_lidar_demo.gif" width="640" height="400"/>
@@ -128,3 +128,12 @@ source install/setup.bash
 ros2 launch perception_3d scanning_lidar_3d_ros_launch.py
 ```
 </details>
+
+## Speed Zone and No-Enter Zone Creation
+Using our zone editor utils to create speed zone or no-enter zone pointcloud.
+The perception_3d plugins will load the point clouds and make them as the speed layer or the no-enter layer.
+
+Check out the configure: [speed_layer_configuration](https://github.com/dfl-rlab/dddmr_navigation/blob/main/src/dddmr_perception_3d/config/speed_limit_layer.yaml)
+
+Also check out the demo video:
+[![YouTube video thumbnail](https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/perception_3d/point_cloud_editor.png)](https://youtu.be/DHgzRD4HrjU)
