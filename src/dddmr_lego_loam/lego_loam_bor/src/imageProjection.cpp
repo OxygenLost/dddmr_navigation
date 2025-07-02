@@ -71,7 +71,7 @@ ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& outpu
   
   declare_parameter("laser.scan_period", rclcpp::ParameterValue(0.1));
   this->get_parameter("laser.scan_period", _scan_period);
-  RCLCPP_INFO(this->get_logger(), "laser.scan_period: %d", _scan_period);
+  RCLCPP_INFO(this->get_logger(), "laser.scan_period: %.2f", _scan_period);
   
   declare_parameter("laser.vertical_angle_bottom", rclcpp::ParameterValue(0.0));
   this->get_parameter("laser.vertical_angle_bottom", _ang_bottom);

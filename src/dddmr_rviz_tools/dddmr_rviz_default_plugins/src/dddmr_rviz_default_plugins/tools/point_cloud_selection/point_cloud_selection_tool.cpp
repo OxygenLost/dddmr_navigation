@@ -79,10 +79,10 @@ void PointCloudSelectionTool::onInitialize()
   move_tool_->initialize(context_);
   //@ ros stuff can only be placed here instead of in constructor
   rclcpp::Node::SharedPtr raw_node = context_->getRosNodeAbstraction().lock()->get_raw_node();
-  selected_bb_pub_ = raw_node->create_publisher<visualization_msgs::msg::MarkerArray>("/point_cloud_selection/selected_bb", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
-  selected_points_pub_ = raw_node->create_publisher<sensor_msgs::msg::PointCloud2>("/point_cloud_selection/selected_points", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
-  selected_bb_vertex_pub_ = raw_node->create_publisher<sensor_msgs::msg::PointCloud2>("/point_cloud_selection/selected_bb_vertex", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
-  sub_map_editor_panel_command_ = raw_node->create_subscription<std_msgs::msg::String>("/point_cloud_selection/panel_command", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
+  selected_bb_pub_ = raw_node->create_publisher<visualization_msgs::msg::MarkerArray>("point_cloud_selection/selected_bb", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
+  selected_points_pub_ = raw_node->create_publisher<sensor_msgs::msg::PointCloud2>("point_cloud_selection/selected_points", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
+  selected_bb_vertex_pub_ = raw_node->create_publisher<sensor_msgs::msg::PointCloud2>("point_cloud_selection/selected_bb_vertex", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
+  sub_map_editor_panel_command_ = raw_node->create_subscription<std_msgs::msg::String>("point_cloud_selection/panel_command", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(),
                             std::bind(&PointCloudSelectionTool::panelCommandCb, this, std::placeholders::_1));
 }
 
@@ -114,6 +114,7 @@ void PointCloudSelectionTool::update(float wall_dt, float ros_dt)
 void PointCloudSelectionTool::panelCommandCb(const std_msgs::msg::String::SharedPtr msg){
   if(msg->data=="clear"){
     if(operation_steps_.size()>0){
+      RCLCPP_INFO(rclcpp::get_logger("PointCloudSelectionTool"), "Clear selected point cloud.");
       operation_steps_.clear();
       publishResultingPCL();
     }
@@ -209,8 +210,6 @@ void PointCloudSelectionTool::publishSelected(rviz_common::ViewportMouseEvent & 
 
   int num_points = model->rowCount();
 
-  std::string node_str_to_be_pub = "";
-
   for( int i = 0; i < num_points; i++ )
   {
     QModelIndex child_index = model->index( i, 0 );
@@ -222,7 +221,7 @@ void PointCloudSelectionTool::publishSelected(rviz_common::ViewportMouseEvent & 
     //Marker pg_0_edge_155/90, 0.00, 0.00, 0.00
     //Point 141488 [cloud 0x94354302778400], 41.52, -17.00, -1.88
     if (child->getNameStd().find("cloud") != std::string::npos) {
-      //RCLCPP_WARN(rclcpp::get_logger("PointCloudSelectionTool"), "%s, %.2f, %.2f, %.2f", child->getNameStd().c_str(), vec.x, vec.y, vec.z);
+      RCLCPP_DEBUG(rclcpp::get_logger("PointCloudSelectionTool"), "%s, %.2f, %.2f, %.2f", child->getNameStd().c_str(), vec.x, vec.y, vec.z);
       pcl::PointXYZ pt;
       pt.x = vec.x;
       pt.y = vec.y;
@@ -535,6 +534,7 @@ void PointCloudSelectionTool::publishResultingPCL(){
   pcl::toROSMsg(accumulated_selected_pc_, output);
   output.header.frame_id = context_->getFixedFrame().toStdString();
   selected_points_pub_->publish(output);
+  RCLCPP_INFO(rclcpp::get_logger("PointCloudSelectionTool"), "Publish new cloud with size: %lu", accumulated_selected_pc_.points.size());
 }
 
 int PointCloudSelectionTool::processKeyEvent(QKeyEvent * event, rviz_common::RenderPanel * panel)
