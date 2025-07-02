@@ -34,7 +34,7 @@
 using std::placeholders::_1;
 
 void DifferentialDriveOdom::init(){
-  cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+  cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::SubscriptionOptions options;
   options.callback_group = cb_group_;
   clock_ = this->get_clock();
