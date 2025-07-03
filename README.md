@@ -1,4 +1,5 @@
 # 🤖 dddmr_navigation
+🤝 We would like to thank the contributors and users of [Navigation](https://github.com/ros-planning/navigation) and [Navigation2](https://github.com/ros-navigation/navigation2), ddd navigation stands on your shoulder!
 
 <table align='center'>
   <tr width="100%">
@@ -26,9 +27,7 @@ Our stack is a total solution for a mobile platform to navigate in 3D environmen
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_navigation/navigation_diagram.png" width="780" height="560"/>
 </p>
 
-🤝 We would like to thank the contributors and users of [Navigation](https://github.com/ros-planning/navigation) and [Navigation2](https://github.com/ros-navigation/navigation2), ddd navigation stands on your shoulder!
-
-
+😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫 I have a robot, but where to start?[Click me to see the beginner's guide](https://github.com/dfl-rlab/dddmr_navigation/blob/main/src/dddmr_beginner_guide/README.md)😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫😵‍💫
 ## 🏁 Detail documentations for each package
 <details><summary> <b>💡 Click me to see Mapping</b> </summary>
 https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam
