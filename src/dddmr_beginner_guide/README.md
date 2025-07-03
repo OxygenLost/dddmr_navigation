@@ -19,4 +19,10 @@ You should be able to run DDDMR Navigation like a charm if your system meet foll
   7. You are good to go.
 
 👉 Advanced:
-  1. Implement [3D odometry](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_odom_3d) to get better and robust localization and mapping results.
+  1. Implement [3D odometry](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_odom_3d) to get a better and robust localization and mapping results.
+
+## 🚧 Start Mapping
+
+## 🚧 Start Localization
+
+## 🚧 Start Point to Point Navigation
