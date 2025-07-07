@@ -25,6 +25,13 @@ The following features are provided and are different from original version:
   - Euclidean Cluster Extraction is used to normalized the rating, we rate each particle by using clusters instead of using points. The points base rating (original version) can not effectively use far objects, because far objects comprise only few points. Instead, our cluster-based rating will be able to compensate this situation.
   - The normal vector of features is used to normalized the rating. When the robot travels between long walls, virtual slipping will occur (the robot think it is not moving at all), the normal of the feature is tracked to compensate virtual slipping condition.
 
+Illustration of sub map concept, the robot will localized using the features in the sub map instead of the whole map:
+<p align='center'>
+    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_mcl_3dl/mcl_3dl_submap_illustration.png" width="850" height="260"/>
+</p>
+
+<details><summary> <b>💡 Click me to see Demo</b> </summary>
+    
 ## RUN The Demo
 ### 1. Create docker image
 The package runs in the docker, so we need to build the image first. We support both x64 (tested in intel NUC) and arm64 (tested in nvidia jetson jpack6).
@@ -65,3 +72,4 @@ cd ~/dddmr_bags && ros2 bag play benanli_detention_basin_localization
 <p align='center'>
     <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_mcl_3dl/mcl_initial_pose.png" width="640" height="400"/>
 </p>
+</details>
