@@ -150,9 +150,13 @@ The Merge ICP button will match the first key frame of each pose graph. i.e.: Me
 After click accept merge, there will be a pop up window to ask the new directory to save the merged result.
 Once the result is saved, you can go back to pose graph panel to keep working on the merge result.
 Steps:
-1. Switch to the first pose graph, and pressed "shift" to select the first key frame of pose graph 1.
-2. Switch to the second pose graph, and pressed "shift" to select the first key frame of pose graph 2.
+
+1. Switch to the first pose graph, and pressed "shift" to select the first key frame of pose graph1.
+
+2. Switch to the second pose graph, and pressed "shift" to select the first key frame of pose graph2.
+
 3. Tick Merge visualization on the Rviz, then you will see two key frames. You can ICP them and fine tune the result.
+
 4. Click accpet to save the result.
 
 #### Check the demo video:
