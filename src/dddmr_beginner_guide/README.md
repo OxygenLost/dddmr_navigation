@@ -22,8 +22,9 @@ You should be able to run DDDMR Navigation like a charm if your system meet foll
   1. Implement [3D odometry](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_odom_3d) to get a better and robust localization and mapping results.
 
 ## 🚧 Start Mapping
+There are 2️⃣ mapping approaches supported in dddmr_navigation.
 
-### Mapping from a Bag File
+### Mapping from a Bag File - Offline Mapping
 To map the area, you can record two ROS2 topics for the offline mapping. Recording odom topic and point cloud topic while manually drive your robot in the area.
 Odom topic for the offline mapping is not mandatory, but in some cases such as featureless environment or wide open area, it can be used to improve the mapping quality.
 
@@ -41,13 +42,13 @@ And then you can run the offline mapping by:
 ```
 ros2 launch lego_loam_bor lego_loam_bag.launch
 ```
-### Mapping in Realtime
+### Mapping in Realtime - Online Mapping
 Similar to the offline mapping, setup the lidar spec correctly in the configutation file:
 https://github.com/dfl-rlab/dddmr_navigation/blob/7706c3333aa9dbc90a4c18598cef05d39388052f/src/dddmr_lego_loam/lego_loam_bor/config/loam_c16_config.yaml#L4
 Change the corresponding topics at:
 https://github.com/dfl-rlab/dddmr_navigation/blob/7706c3333aa9dbc90a4c18598cef05d39388052f/src/dddmr_lego_loam/lego_loam_bor/launch/lego_loam.launch#L6
 
-And then you can run the realtime mapping by:
+And then you can run the online mapping by:
 ```
 ros2 launch lego_loam_bor lego_loam.launch
 ```
