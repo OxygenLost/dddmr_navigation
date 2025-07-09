@@ -128,7 +128,7 @@ MapOptimization::MapOptimization(std::string name,
   this->get_parameter("mapping.ground_voxel_size", ground_voxel_size_);
   RCLCPP_INFO(this->get_logger(), "mapping.ground_voxel_size: %.2f", ground_voxel_size_);
   downSizeFilterGlobalGroundKeyFrames.setLeafSize(ground_voxel_size_, ground_voxel_size_, ground_voxel_size_);
-   downSizeFilterGlobalGroundKeyFrames_Copy.setLeafSize(ground_voxel_size_, ground_voxel_size_, ground_voxel_size_);
+  downSizeFilterGlobalGroundKeyFrames_Copy.setLeafSize(ground_voxel_size_, ground_voxel_size_, ground_voxel_size_);
 
   declare_parameter("mapping.ground_edge_threshold_num", rclcpp::ParameterValue(50));
   this->get_parameter("mapping.ground_edge_threshold_num", ground_edge_threshold_num_);
@@ -681,6 +681,7 @@ void MapOptimization::publishTF() {
   
   geometry_msgs::msg::TransformStamped map2odom;
   map2odom.header.frame_id = "map";
+
   map2odom.header.stamp = wheelOdometry.header.stamp;
   map2odom.child_frame_id = wheelOdometry.header.frame_id;
   map2odom.transform.rotation.x = tf2_trans_m2o.getRotation().x();
@@ -694,7 +695,8 @@ void MapOptimization::publishTF() {
 
   if(broadcast_odom_tf_){
     geometry_msgs::msg::TransformStamped odom2baselink;
-    odom2baselink.header = wheelOdometry.header;
+    odom2baselink.header.stamp = map2odom.header.stamp;
+    odom2baselink.header.frame_id = map2odom.child_frame_id;
     odom2baselink.child_frame_id = wheelOdometry.child_frame_id;
     odom2baselink.transform.rotation.x = wheelOdometry.pose.pose.orientation.x;
     odom2baselink.transform.rotation.y = wheelOdometry.pose.pose.orientation.y;
@@ -862,6 +864,7 @@ void MapOptimization::publishGlobalMap() {
     downSizeFilterGlobalGroundKeyFrames_Copy.filter(*temp_frame);
     *globalGroundKeyFrames += *temp_frame;
   }
+  
   std::lock_guard<std::mutex> lock(mtx);
   //@ transform to map frame --> z pointing to sky
   pcl::transformPointCloud(*globalGroundKeyFrames, *globalGroundKeyFrames, trans_m2ci_af3_);
@@ -1982,9 +1985,6 @@ void MapOptimization::run() {
   laserCloudSurfLast = association.cloud_surf_last;
   laserCloudOutlierLast = association.cloud_outlier_last;
 
-  pcl::transformPointCloud(*association.cloud_patched_ground_last, *laserCloudPatchedGroundLast, trans_c2s_af3_);
-  pcl::transformPointCloud(*association.cloud_patched_ground_edge_last, *laserCloudPatchedGroundEdgeLast, trans_c2s_af3_);
-
   //pcl::copyPointCloud(association.cloud_corner_last, *laserCloudCornerLast);
   nav_msgs::msg::Odometry laser_odometry = std::move(association.laser_odometry);
 
@@ -2001,6 +2001,9 @@ void MapOptimization::run() {
   wheelOdometry = association.wheel_odometry;
   broadcast_odom_tf_ = association.broadcast_odom_tf;
   
+  pcl::transformPointCloud(*association.cloud_patched_ground_last, *laserCloudPatchedGroundLast, trans_c2s_af3_);
+  pcl::transformPointCloud(*association.cloud_patched_ground_edge_last, *laserCloudPatchedGroundEdgeLast, trans_c2s_af3_);
+
   OdometryToTransform(laser_odometry, transformSum);
 
   transformAssociateToMap();
@@ -2032,9 +2035,6 @@ void MapOptimization::runWoLO(){
   laserCloudSurfLast = association.cloud_surf_last;
   laserCloudOutlierLast = association.cloud_outlier_last;
 
-  pcl::transformPointCloud(*association.cloud_patched_ground_last, *laserCloudPatchedGroundLast, trans_c2s_af3_);
-  pcl::transformPointCloud(*association.cloud_patched_ground_edge_last, *laserCloudPatchedGroundEdgeLast, trans_c2s_af3_);
-
   //pcl::copyPointCloud(association.cloud_corner_last, *laserCloudCornerLast);
   nav_msgs::msg::Odometry laser_odometry = std::move(association.laser_odometry);
 
@@ -2050,6 +2050,9 @@ void MapOptimization::runWoLO(){
   tf2_trans_c2b_.setOrigin(tf2::Vector3(association.trans_c2b.transform.translation.x, association.trans_c2b.transform.translation.y, association.trans_c2b.transform.translation.z));
   wheelOdometry = association.wheel_odometry;
   broadcast_odom_tf_ = association.broadcast_odom_tf;
+
+  pcl::transformPointCloud(*association.cloud_patched_ground_last, *laserCloudPatchedGroundLast, trans_c2s_af3_);
+  pcl::transformPointCloud(*association.cloud_patched_ground_edge_last, *laserCloudPatchedGroundEdgeLast, trans_c2s_af3_);
 
   OdometryToTransform(laser_odometry, transformSum);
 

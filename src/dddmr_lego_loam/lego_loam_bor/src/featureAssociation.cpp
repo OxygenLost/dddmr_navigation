@@ -1244,18 +1244,6 @@ void FeatureAssociation::checkSystemInitialization() {
   laserCloudCornerLastNum = laserCloudCornerLast->points.size();
   laserCloudSurfLastNum = laserCloudSurfLast->points.size();
 
-  sensor_msgs::msg::PointCloud2 laserCloudCornerLast2;
-  pcl::toROSMsg(*laserCloudCornerLast, laserCloudCornerLast2);
-  laserCloudCornerLast2.header.stamp = cloudHeader.stamp;
-  laserCloudCornerLast2.header.frame_id = "camera";
-  _pub_cloud_corner_last->publish(laserCloudCornerLast2);
-
-  sensor_msgs::msg::PointCloud2 laserCloudSurfLast2;
-  pcl::toROSMsg(*laserCloudSurfLast, laserCloudSurfLast2);
-  laserCloudSurfLast2.header.stamp = cloudHeader.stamp;
-  laserCloudSurfLast2.header.frame_id = "camera";
-  _pub_cloud_surf_last->publish(laserCloudSurfLast2);
-
   systemInitedLM = true;
 }
 
@@ -1394,12 +1382,16 @@ void FeatureAssociation::publishCloud() {
 
   auto Publish = [&](rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub,
                      const pcl::PointCloud<PointType>::Ptr &cloud) {
-    if (true) {
-      pcl::toROSMsg(*cloud, laserCloudOutMsg);
-      laserCloudOutMsg.header.stamp = cloudHeader.stamp;
-      laserCloudOutMsg.header.frame_id = "camera";
-      pub->publish(laserCloudOutMsg);
-    }
+    
+    pcl::PointCloud<PointType>::Ptr tmp_pub_cloud;
+    tmp_pub_cloud.reset(new pcl::PointCloud<PointType>());
+    Eigen::Affine3d trans_c2s_af3d = tf2::transformToEigen(trans_c2s_);
+    pcl::transformPointCloud(*cloud, *tmp_pub_cloud, trans_c2s_af3d.inverse());
+    
+    pcl::toROSMsg(*tmp_pub_cloud, laserCloudOutMsg);
+    laserCloudOutMsg.header = cloudHeader;
+    pub->publish(laserCloudOutMsg);
+    
   };
 
   Publish(pubCornerPointsSharp, cornerPointsSharp);
@@ -1447,12 +1439,15 @@ void FeatureAssociation::publishCloudsLast() {
 
     auto Publish = [&](rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub,
                        const pcl::PointCloud<PointType>::Ptr &cloud) {
-      if (true) {
-        pcl::toROSMsg(*cloud, cloudTemp);
-        cloudTemp.header.stamp = cloudHeader.stamp;
-        cloudTemp.header.frame_id = "camera";
-        pub->publish(cloudTemp);
-      }
+
+      pcl::PointCloud<PointType>::Ptr tmp_pub_cloud;
+      tmp_pub_cloud.reset(new pcl::PointCloud<PointType>());
+      Eigen::Affine3d trans_c2s_af3d = tf2::transformToEigen(trans_c2s_);
+      pcl::transformPointCloud(*cloud, *tmp_pub_cloud, trans_c2s_af3d.inverse());
+      pcl::toROSMsg(*tmp_pub_cloud, cloudTemp);
+      cloudTemp.header = cloudHeader;
+      pub->publish(cloudTemp);
+      
     };
 
     Publish(_pub_outlier_cloudLast, outlierCloud);

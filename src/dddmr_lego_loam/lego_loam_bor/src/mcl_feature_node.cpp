@@ -23,6 +23,8 @@ int main(int argc, char** argv) {
   rclcpp::executors::MultiThreadedExecutor executor;
   executor.add_node(IP);
   executor.add_node(FA);
+  IP->tfInitial();
+  FA->tfInitial();
   executor.spin();
 
   rclcpp::shutdown();

@@ -6,9 +6,7 @@
   </node>
 
   <!--- TF -->
-  <node pkg="tf2_ros" exec="static_transform_publisher" name="camera_init_to_map"  args="0 0 0 1.570795 0 1.570795 map camera_init" />
-  <node pkg="tf2_ros" exec="static_transform_publisher" name="sensor2baselink"  args="0.3 0 -0.3 3.1415926535 0 0 laser_link base_link" />
-  
+  <node pkg="tf2_ros" exec="static_transform_publisher" name="sensor2baselink"  args="0.3 0 0.38 -3.1415926535 0.0 0 base_link laser_link" />
   
   <!--name argument is not required, because it will overwrite all node name in the exec-->
   <node pkg="global_planner" exec="global_planner_node" output="screen" respawn="false">

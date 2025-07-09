@@ -6,6 +6,7 @@
 #include <pcl/kdtree/kdtree_flann.h>
 #include <Eigen/Eigenvalues>
 #include <Eigen/QR>
+#include <tf2_eigen/tf2_eigen.hpp>
 
 // odom sanity check
 #include "tf2_ros/buffer.h"
