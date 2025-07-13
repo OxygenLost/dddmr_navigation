@@ -25,6 +25,11 @@ cd ~/dddmr_navigation/dddmr_docker/docker_file && ./build.bash
 ```
 cd ~/dddmr_navigation/dddmr_docker && ./run_demo.bash
 ```
+#### Download essential files
+Pose graph (3.3MB) and a bag file (1.2GB) will be download to run the demo.
+```
+cd ~/dddmr_navigation/src/dddmr_mcl_3dl && ./download_files.bash
+```
 #### Launch p2p move base
 ```
 cd ~/dddmr_navigation && source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
