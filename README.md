@@ -1,5 +1,7 @@
 # 🤖 dddmr_navigation
 
+DDDMR Navigation Stack is designed to solve the issues that [Nav2](https://github.com/ros-navigation/navigation2) not able to handle: such as multi-layer floor mapping and localization, path planning in stereo structuresm and percption markings and clearings in #D piint cloud map.
+
 <table align='center'>
   <tr width="100%">
     <td width="30%"><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_navigation/multilevel_map.gif" width="250" height="260"/><p align='center'>Multilevel map</p></td>
