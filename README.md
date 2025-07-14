@@ -1,5 +1,4 @@
 # 🤖 dddmr_navigation
-🤝 We would like to thank the contributors and users of [Navigation](https://github.com/ros-planning/navigation) and [Navigation2](https://github.com/ros-navigation/navigation2), ddd navigation stands on your shoulder!
 
 <table align='center'>
   <tr width="100%">
