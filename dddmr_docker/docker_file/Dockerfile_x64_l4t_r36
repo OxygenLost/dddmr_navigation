@@ -103,11 +103,28 @@ RUN python3 -m pip install onnx==1.17.0
 
 #-----we have deep learning-----
 
-# intel realsense
-RUN apt install -y sudo ros-humble-diagnostic-updater
+# rs
 RUN /bin/bash -c "cd /tmp && git clone https://github.com/IntelRealSense/librealsense.git && cd librealsense && git checkout e1688cc318457f7dd57abcdbedd3398062db3009"
 COPY bash/libuvc_installation.bash /tmp/librealsense/scripts
 RUN /bin/bash -c "cd /tmp/librealsense && chmod +x /tmp/librealsense/scripts/libuvc_installation.bash && ./scripts/libuvc_installation.bash"
+#ARG LIBRS_VERSION=2.56.1
+#RUN /bin/bash -c "cd /tmp && curl -L https://github.com/IntelRealSense/librealsense/archive/refs/tags/v${LIBRS_VERSION}.zip -o librealsense.zip\
+#    && unzip librealsense.zip && rm librealsense.zip && \
+#    cd librealsense-${LIBRS_VERSION} && \
+#    mkdir build && cd build && \
+#    cmake .. -DBUILD_EXAMPLES=ON -DBUILD_GRAPHICAL_EXAMPLES=ON \
+#             -DBUILD_WITH_OPENMP=OFF -DBUILD_UNIT_TESTS=OFF \
+#             -DCMAKE_BUILD_TYPE=Release -DENABLE_ZERO_COPY=ON \
+#             -DFORCE_LIBUVC=OFF && \
+#    make -j$(nproc) && make install"
+
+# rs ros
+RUN apt install -y sudo ros-humble-diagnostic-updater
+WORKDIR /usr/local/src/realsense_ros/src 
+RUN git clone https://github.com/IntelRealSense/realsense-ros.git && cd realsense-ros && git checkout 1cbd81be81e807eefb46f098e76381888ffc7001\
+    && cd ../..\
+    && /bin/bash -c ". /opt/ros/humble/setup.bash && colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --merge-install --install-base /opt/ros/humble/install"\
+    && rm -rf src
 
 WORKDIR /root
 

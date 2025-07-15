@@ -15,23 +15,23 @@ fi
 
 lsb_release -a
 echo "Kernel version $(uname -r)"
-sudo apt-get update
+apt-get update
 cd ~/
-sudo rm -rf ./librealsense_build
+rm -rf ./librealsense_build
 mkdir librealsense_build && cd librealsense_build
 
-if [ $(sudo swapon --show | wc -l) -eq 0 ];
+if [ $(swapon --show | wc -l) -eq 0 ];
 then
 	echo "No swapon - setting up 1Gb swap file"
-	sudo fallocate -l 2G /swapfile
-	sudo chmod 600 /swapfile
-	sudo mkswap /swapfile
-	sudo swapon /swapfile
-	sudo swapon --show
+	fallocate -l 2G /swapfile
+	chmod 600 /swapfile
+	mkswap /swapfile
+	swapon /swapfile
+	swapon --show
 fi
 
 echo Installing Librealsense-required dev packages
-sudo apt-get install git cmake libssl-dev freeglut3-dev libusb-1.0-0-dev pkg-config libgtk-3-dev unzip -y
+apt-get install git cmake libssl-dev freeglut3-dev libusb-1.0-0-dev pkg-config libgtk-3-dev unzip -y
 rm -f ./master.zip
 
 wget https://github.com/IntelRealSense/librealsense/archive/master.zip
@@ -39,15 +39,14 @@ unzip ./master.zip -d .
 cd ./librealsense-master
 
 echo Install udev-rules
-sudo cp config/99-realsense-libusb.rules /etc/udev/rules.d/ 
-sudo cp config/99-realsense-d4xx-mipi-dfu.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules && sudo udevadm trigger 
+cp config/99-realsense-libusb.rules /etc/udev/rules.d/ 
+cp config/99-realsense-d4xx-mipi-dfu.rules /etc/udev/rules.d/
+udevadm control --reload-rules && sudo udevadm trigger 
 mkdir build && cd build
 cmake ../ -DFORCE_LIBUVC=true -DCMAKE_BUILD_TYPE=release -DBUILD_WITH_CUDA=true
 make -j6
-sudo make install
+make install
 echo -e "\e[92m\n\e[1mLibrealsense script completed.\n\e[0m"
-
 
 
 
