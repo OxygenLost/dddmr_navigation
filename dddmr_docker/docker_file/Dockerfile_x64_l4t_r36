@@ -99,6 +99,7 @@ RUN /bin/bash -c "cd /tmp && apt update && apt-get -y install cudnn"
 RUN /bin/bash -c "cd /tmp && wget https://developer.download.nvidia.com/compute/redist/jp/v61/pytorch/torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl && python3 -m pip install --upgrade pip; python3 -m pip install numpy==1.26.1; python3 -m pip install --no-cache torch-2.5.0a0+872d972e41.nv24.08.17622132-cp310-cp310-linux_aarch64.whl"
 RUN /bin/bash -c "cd /tmp && git clone https://github.com/pytorch/vision.git && cd vision && git checkout v0.20.0 && python3 setup.py install"
 RUN pip3 install pycuda
+RUN python3 -m pip install onnx==1.17.0
 
 #-----we have deep learning-----
 
