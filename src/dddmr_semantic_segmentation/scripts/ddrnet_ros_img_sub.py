@@ -23,7 +23,13 @@ class DDRNetROS(Node):
 
         super().__init__('ddrnet_ros')
 
-        self.publish_colored_mask_result = True #set to False to save cpu up tp 20%
+        # Check if a GPU is available and set the device accordingly
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+
+        self.publish_colored_mask_result = True #set to False to save cpu up tp 20% and reach more than 15 fps
         self.publish_class_based_mask_result = False
 
         self.trt_inference = trt_inference
@@ -71,7 +77,10 @@ class DDRNetROS(Node):
         nparr_cropped_transformed_frame = self.input_transform(nparr_cropped_frame)
         output_data = self.trt_inference.infer(nparr_cropped_transformed_frame)
         reshaped_output_data = np.reshape(output_data, (1, 19, 424, 848))
-        pred = np.argmax(reshaped_output_data, 1)
+        tensor_on_device = torch.from_numpy(reshaped_output_data).float().to(self.device)
+        argmax_indices = torch.argmax(tensor_on_device, dim=1)
+        pred = argmax_indices.cpu().data.numpy()
+        #pred = np.argmax(reshaped_output_data, 1)
         self.get_logger().debug(f"Shape of pred: {pred.shape}")
         pred_2d = pred[0,:,:].astype(np.uint8)
         
