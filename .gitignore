@@ -172,3 +172,5 @@ cython_debug/
 /install
 /build
 /log
+
+*.trt
