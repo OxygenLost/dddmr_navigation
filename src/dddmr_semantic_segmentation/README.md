@@ -2,17 +2,23 @@
 
 DDDMR semantic segmentation convert semantic segmentation result and align it with depth image to colorize the point cloud.
 The TensorRT is used to faciliate the inference speed, we can achieve ~15 fps of resulted point cloud.
- 
-Generate TensorRT file from the onnx:
+
+<p align='center'>
+    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_semantic_segmentation/dddmr%20semantic%20segmentation.png" width="780" height="560"/>
+</p>
+
+## Demo Tutorial
+
+Request:
+This pipeline requires RGBD camera.
+
+#### 1. Generate TensorRT file from the onnx:
 ```
 cd /root/dddmr_navigation/src/dddmr_semantic_segmentation/model
 /usr/src/tensorrt/bin/trtexec --onnx=ddrnet_23_slim_dualresnet_citys_best_model_424x848.onnx --saveEngine=ddrnet_23_slim_dualresnet_citys_best_model_424x848.trt
 ```
 
-Request:
-This pipeline requires RGBD camera.
-
-Compile
+#### 2. Compile
 ```
 source /opt/ros/humble/install/setup.bash
 cd /root/dddmr_navigation
