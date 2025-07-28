@@ -23,7 +23,7 @@ SemanticSegmentation2PointCloud::SemanticSegmentation2PointCloud(std::string nam
   downSizeFilter_intensity_.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
   downSizeFilter_rgb_.setLeafSize(leaf_size_, leaf_size_, leaf_size_);
   
-  cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("sematic_segmentation_poinbt_cloud", 2);
+  cloud_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("sematic_segmentation_point_cloud", 2);
 
   cbs_group2_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
 

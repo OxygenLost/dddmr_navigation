@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import rclpy
 import cv2
 import numpy as np 
@@ -108,7 +110,7 @@ def main(args=None):
     
     pkg_path = get_package_share_directory('dddmr_semantic_segmentation')
     engine_path = pkg_path + "/model/ddrnet_23_slim_dualresnet_citys_best_model_424x848.trt"
-    color_csv_path = pkg_path + "/data/colors_mapillary_person_and_sidewalk.csv"
+    color_csv_path = pkg_path + "/data/colors_mapillary.csv"
     trt_inference = TensorRTInference(engine_path, color_csv_path)
 
     DDRNROS = DDRNetROS(trt_inference)

@@ -55,33 +55,11 @@ def generate_launch_description():
         'log_level', default_value='info',
         description='log level')
 
-    realsense_camera_node = Node(
-        name='camera',
-        namespace='camera',
-        package='realsense2_camera',
-        executable='realsense2_camera_node',
-        parameters=[{
-                'enable_infra1': False,
-                'enable_infra2': False,
-                'enable_color': True,
-                'enable_depth': True,
-                'depth_module.emitter_enabled': 1,
-                'depth_module.profile': '848x480x30',
-                'rgb_camera.color_profile': '848x480x30',
-                'pointcloud.enable': True,
-                'enable_gyro': True,
-                'enable_accel': True,
-                'gyro_fps': 200,
-                'accel_fps': 200,
-                'unite_imu_method': 2
-        }]
-    )
-
     trt_node = Node(
         package='dddmr_semantic_segmentation',
         executable='ddrnet_ros_img_sub.py',
         remappings=[
-            ('/camera/camera/color/image_raw', '/camera/camera/color/image_raw')
+            ('/camera/camera/color/image_raw', '/realsense/mid/color/image_raw')
         ]
     )
 
@@ -90,14 +68,14 @@ def generate_launch_description():
         package='dddmr_semantic_segmentation',
         executable='semantic_segmentation2point_cloud',
         parameters=[{
-            'max_distance': 6.0,
+            'max_distance': 10.0,
             'sample_step': 2,
             'voxel_size': 0.05
         }],
         remappings=[
-            ('/camera_info', '/camera/camera/depth/camera_info'),
+            ('/camera_info', '/realsense/mid/depth/camera_info'),
             ('/ddrnet_inferenced_mask', '/ddrnet_inferenced_mask'),
-            ('/image_rect_raw', '/camera/camera/depth/image_rect_raw')
+            ('/image_rect_raw', '/realsense/mid/depth/image_rect_raw')
         ]
     )
     
@@ -107,9 +85,26 @@ def generate_launch_description():
             namespace=namespace,
             executable="rviz2",
             output="screen",
-            arguments=['-d', os.path.join(pkg_path, 'rviz', 'rs_semantic_segmentation_launch.rviz')]
+            arguments=['-d', os.path.join(pkg_path, 'rviz', 'bag_semantic_segmentation_launch.rviz')]
     ) 
 
+    bag_player = ExecuteProcess(
+        cmd=[
+            "ros2",
+            "bag",
+            "play",
+            "--loop",
+            "/root/dddmr_bags/rs435_rgbd_848x380",
+        ],
+        output="screen",
+    )
+
+    cam2optical = Node(
+            package="tf2_ros",
+            executable="static_transform_publisher",
+            output="screen" ,
+            arguments=["0.0", "0.0", "0.0", "-1.571", "-0.000", "-1.571", "camera_link", "mid_depth_optical_frame"]
+        )
 
     # Create the launch description and populate
     ld = LaunchDescription()
@@ -123,10 +118,11 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     
-
-    ld.add_action(realsense_camera_node)
     ld.add_action(trt_node)
     ld.add_action(mask2pointcloud_node)
     ld.add_action(rviz2_node)
+
+    ld.add_action(cam2optical)
+    ld.add_action(TimerAction(period=8.0, actions=[bag_player])) #wait for engine to be loaded
 
     return ld
