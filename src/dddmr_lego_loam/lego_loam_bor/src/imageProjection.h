@@ -101,6 +101,9 @@ class ImageProjection : public rclcpp::Node
     geometry_msgs::msg::TransformStamped trans_c2s_;
     geometry_msgs::msg::TransformStamped trans_c2b_;
 
+    //@ list of pointcloud sticher for non-repetitive scan lidar
+    std::list<pcl::PointCloud<PointType>> pcl_stitcher_;
+
 };
 
 

@@ -258,10 +258,31 @@ void ImageProjection::cloudHandler(
 
   resetParameters();
 
-  // Copy and remove NAN points
   pcl::fromROSMsg(*laserCloudMsg, *_laser_cloud_in);
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*_laser_cloud_in, *_laser_cloud_in, indices);
+  int stitcher_num_ = 5;
+  //@if not stitch, save copy time
+  pcl::PointCloud<PointType>::Ptr pcl_stitched_msg (new pcl::PointCloud<PointType>);
+  if(stitcher_num_<=0){
+  }
+  else{
+    if(pcl_stitcher_.size()<stitcher_num_){
+      pcl_stitcher_.push_back(*_laser_cloud_in);
+    }
+    else{
+      pcl_stitcher_.pop_front();
+      pcl_stitcher_.push_back(*_laser_cloud_in);
+    }
+    
+    for(auto si=pcl_stitcher_.begin(); si!=pcl_stitcher_.end();si++){
+      *pcl_stitched_msg += (*si);
+    }
+    *_laser_cloud_in = *pcl_stitched_msg;
+  }
+
+  // Copy and remove NAN points
+
   _seg_msg.header = laserCloudMsg->header;
   
   // transform tilted lidar back to horizontal
