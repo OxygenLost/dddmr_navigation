@@ -265,15 +265,15 @@ void ImageProjection::cloudHandler(
   _seg_msg.header = laserCloudMsg->header;
   
   // transform tilted lidar back to horizontal
-  /*
+  
   geometry_msgs::msg::TransformStamped trans_lidar2horizontal;
   tf2::Quaternion q;
-  q.setRPY( 0, _sensor_mount_angle*1.0, 0);
+  q.setRPY( 0, -1.5707963, 0);
   trans_lidar2horizontal.transform.rotation.x = q.x(); trans_lidar2horizontal.transform.rotation.y = q.y();
   trans_lidar2horizontal.transform.rotation.z = q.z(); trans_lidar2horizontal.transform.rotation.w = q.w();
   Eigen::Affine3d trans_lidar2horizontal_af3 = tf2::transformToEigen(trans_lidar2horizontal);
   pcl::transformPointCloud(*_laser_cloud_in, *_laser_cloud_in, trans_lidar2horizontal_af3);
-  */
+  
   findStartEndAngle();
   // Range image projection
   projectPointCloud();

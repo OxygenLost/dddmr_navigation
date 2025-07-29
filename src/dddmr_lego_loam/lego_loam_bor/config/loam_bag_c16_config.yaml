@@ -1,8 +1,8 @@
 bag_reader:
   ros__parameters:
     use_sim_time: true
-    bag_file_dir: "/root/dddmr_bags/weiwuyin_back_side"
-    point_cloud_topic: "/lslidar_point_cloud"
+    bag_file_dir: "/root/dddmr_bags/airy"
+    point_cloud_topic: "/rslidar_points"
     odometry_topic: "/odom"
     skip_frame: 2
 
@@ -13,17 +13,17 @@ lego_loam_ip:
     laser:
         odom_type: "laser_odometry"         #wheel_odometry/laser_odometry 
         baselink_frame: "base_link"
-        num_vertical_scans: 16
-        num_horizontal_scans: 1000
-        ground_scan_index: 7
-        vertical_angle_bottom: -15.0          # degrees
-        vertical_angle_top: 15.0            # degrees
+        num_vertical_scans: 96
+        num_horizontal_scans: 900
+        ground_scan_index: 48
+        vertical_angle_bottom: -90.0          # degrees
+        vertical_angle_top: 90.0            # degrees
         scan_period: 0.1                   # seconds
 
     imageProjection:
         segment_valid_point_num: 5
         segment_valid_line_num: 2
-        segment_theta: 60.0                      # decrese this value may improve accuracy
+        segment_theta: 30.0                      # decrese this value may improve accuracy
         maximum_detection_range: 100.0            # point cloud within this range will be used to project image
         distance_for_patch_between_rings: 1.0    # patch ground between rings within this range, i.e. ring0 and ring1 is smaller than 1 meter, patch them
 
@@ -31,8 +31,8 @@ lego_loam_fa:
   ros__parameters:
     use_sim_time: true
     featureAssociation:                              
-        edge_threshold: 0.1
-        surf_threshold: 0.1
+        edge_threshold: 0.3
+        surf_threshold: 0.3
         nearest_feature_search_distance: 3.0
 
     mapping:

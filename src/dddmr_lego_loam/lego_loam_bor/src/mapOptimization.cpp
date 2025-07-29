@@ -837,6 +837,8 @@ void MapOptimization::publishGlobalMap() {
   for (int i = 0; i < cloudKeyPoses6D_Copy->points.size(); ++i) {
     *globalMapKeyFrames += *transformPointCloud(
         cornerCloudKeyFramesVisualization_Copy[i], &cloudKeyPoses6D_Copy->points[i]);
+    *globalMapKeyFrames += *transformPointCloud(
+        outlierCloudKeyFrames[i], &cloudKeyPoses6D_Copy->points[i]);
   }
 
   //@ transform to map frame --> z pointing to sky
