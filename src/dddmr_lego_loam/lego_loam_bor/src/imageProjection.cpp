@@ -209,6 +209,15 @@ bool ImageProjection::allEssentialTFReady(std::string sensor_frame){
       tf2::Matrix3x3 m(tf2_trans_b2s_.getRotation());
       double roll, pitch, yaw;
       m.getRPY(roll, _sensor_mount_angle, yaw);
+      
+      //@ we got pitch, remove pitch in the tf
+      tf2::Quaternion zero_pitch;
+      zero_pitch.setRPY(0, 0, yaw);
+      tf2_trans_b2s_.setRotation(zero_pitch);
+      trans_b2s_.transform.rotation.x = tf2_trans_b2s_.getRotation().x();
+      trans_b2s_.transform.rotation.y = tf2_trans_b2s_.getRotation().y();
+      trans_b2s_.transform.rotation.z = tf2_trans_b2s_.getRotation().z();
+      trans_b2s_.transform.rotation.w = tf2_trans_b2s_.getRotation().w();
 
       // camera to sensor
       tf2::Quaternion qc2s;
@@ -268,7 +277,7 @@ void ImageProjection::cloudHandler(
   
   geometry_msgs::msg::TransformStamped trans_lidar2horizontal;
   tf2::Quaternion q;
-  q.setRPY( 0, -1.5707963, 0);
+  q.setRPY( 0, _sensor_mount_angle, 0);
   trans_lidar2horizontal.transform.rotation.x = q.x(); trans_lidar2horizontal.transform.rotation.y = q.y();
   trans_lidar2horizontal.transform.rotation.z = q.z(); trans_lidar2horizontal.transform.rotation.w = q.w();
   Eigen::Affine3d trans_lidar2horizontal_af3 = tf2::transformToEigen(trans_lidar2horizontal);

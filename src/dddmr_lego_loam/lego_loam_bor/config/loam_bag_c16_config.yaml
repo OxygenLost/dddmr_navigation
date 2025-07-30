@@ -24,7 +24,7 @@ lego_loam_ip:
         segment_valid_point_num: 5
         segment_valid_line_num: 2
         segment_theta: 30.0                      # decrese this value may improve accuracy
-        maximum_detection_range: 100.0            # point cloud within this range will be used to project image
+        maximum_detection_range: 50.0            # point cloud within this range will be used to project image
         distance_for_patch_between_rings: 1.0    # patch ground between rings within this range, i.e. ring0 and ring1 is smaller than 1 meter, patch them
 
 lego_loam_fa:
