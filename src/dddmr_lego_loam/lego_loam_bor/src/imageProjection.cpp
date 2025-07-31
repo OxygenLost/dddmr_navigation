@@ -38,6 +38,8 @@ ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& outpu
   //supress the no intensity found log
   pcl::console::setVerbosityLevel(pcl::console::L_ERROR);
   clock_ = this->get_clock();
+  
+  tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
 
   _sub_laser_cloud = this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "lslidar_point_cloud", 2,
@@ -219,6 +221,21 @@ bool ImageProjection::allEssentialTFReady(std::string sensor_frame){
       trans_b2s_.transform.rotation.z = tf2_trans_b2s_.getRotation().z();
       trans_b2s_.transform.rotation.w = tf2_trans_b2s_.getRotation().w();
 
+      //@ pubish a static tf for a frame that removing pitch
+      geometry_msgs::msg::TransformStamped trans_sensor2sensor_no_pitch;
+      trans_sensor2sensor_no_pitch.header.frame_id = sensor_frame;
+      trans_sensor2sensor_no_pitch.child_frame_id = sensor_frame+"_pitch_removed";
+      trans_sensor2sensor_no_pitch.transform.translation.x = 0.0; trans_sensor2sensor_no_pitch.transform.translation.y = 0.0; trans_sensor2sensor_no_pitch.transform.translation.z = 0.0;
+      tf2::Quaternion compensate_pitch;
+      compensate_pitch.setRPY(0, -1.0*_sensor_mount_angle, 0);
+      trans_sensor2sensor_no_pitch.transform.rotation.x = compensate_pitch.x();
+      trans_sensor2sensor_no_pitch.transform.rotation.y = compensate_pitch.y();
+      trans_sensor2sensor_no_pitch.transform.rotation.z = compensate_pitch.z();
+      trans_sensor2sensor_no_pitch.transform.rotation.w = compensate_pitch.w();
+      
+      tf_static_broadcaster_->sendTransform(trans_sensor2sensor_no_pitch);
+
+
       // camera to sensor
       tf2::Quaternion qc2s;
       qc2s.setRPY(0,-1.570795,-1.570795);
@@ -271,8 +288,9 @@ void ImageProjection::cloudHandler(
   pcl::fromROSMsg(*laserCloudMsg, *_laser_cloud_in);
   std::vector<int> indices;
   pcl::removeNaNFromPointCloud(*_laser_cloud_in, *_laser_cloud_in, indices);
-  _seg_msg.header = laserCloudMsg->header;
-  
+  _seg_msg.header.stamp = laserCloudMsg->header.stamp;
+  _seg_msg.header.frame_id = laserCloudMsg->header.frame_id+"_pitch_removed";
+
   // transform tilted lidar back to horizontal
   
   geometry_msgs::msg::TransformStamped trans_lidar2horizontal;

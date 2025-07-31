@@ -13,6 +13,8 @@
 #include <tf2_ros/transform_listener.h>
 #include "tf2_ros/create_timer_ros.h"
 
+#include "tf2_ros/static_transform_broadcaster.h"
+
 class ImageProjection : public rclcpp::Node 
 {
   public:
@@ -100,7 +102,8 @@ class ImageProjection : public rclcpp::Node
     tf2::Transform tf2_trans_b2s_, tf2_trans_c2s_, tf2_trans_c2b_;
     geometry_msgs::msg::TransformStamped trans_c2s_;
     geometry_msgs::msg::TransformStamped trans_c2b_;
-
+    
+    std::shared_ptr<tf2_ros::StaticTransformBroadcaster> tf_static_broadcaster_;
 };
 
 
