@@ -29,7 +29,7 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "canbus_read_node.h"
+#include "canbus_rw_node.h"
 
 using std::placeholders::_1;
 
@@ -70,7 +70,35 @@ void CANBusReader::parseCANFrame(can_frame *rx_frame) {
 }
 
 void CANBusReader::timerLoop(){
+  
+  can_frame frame;
 
+  frame.can_id = 304;
+  frame.can_dlc = 8;
+
+  int16_t linear_cmd =
+      (int16_t)(0.1 * 1000);
+  int16_t angular_cmd =
+      (int16_t)(0.2 * 1000);
+  int16_t lateral_cmd =
+      (int16_t)(0.3 * 1000);
+  int16_t steering_cmd =
+      (int16_t)(0.4 * 1000);
+
+  frame.data[0] = (uint8_t)(linear_cmd >> 8);
+  frame.data[1] = (uint8_t)(linear_cmd & 0x00ff);
+  frame.data[2] = (uint8_t)(angular_cmd >> 8);
+  frame.data[3] = (uint8_t)(angular_cmd & 0x00ff);
+  frame.data[4] = (uint8_t)(lateral_cmd >> 8);
+  frame.data[5] = (uint8_t)(lateral_cmd & 0x00ff);
+  frame.data[6] = (uint8_t)(steering_cmd >> 8);
+  frame.data[7] = (uint8_t)(steering_cmd & 0x00ff);
+
+  // encode msg to can frame and send to bus
+  if (can_ != nullptr && can_->IsOpened()) {
+    
+    can_->SendFrame(frame);
+  }
 }
 
 

@@ -29,8 +29,8 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef EXAMPLE_ODOM_3D_H_
-#define EXAMPLE_ODOM_3D_H_
+#ifndef DDDMR_CANBUS_RW_
+#define DDDMR_CANBUS_RW_
 
 #include <chrono> // Date and time
 #include <functional> // Arithmetic, comparisons, and logical operations
@@ -85,4 +85,4 @@ class CANBusReader: public rclcpp::Node{
 
     
 };
-#endif  // EXAMPLE_ODOM_3D_H_
+#endif  // DDDMR_CANBUS_RW_

@@ -53,9 +53,7 @@ include_directories(
 
 # add sdk main library
 add_library(dddmr_canbus
-    ########################
-    src/async_can.cpp
-    ########################
+  src/async_can.cpp
 )
 target_link_libraries(dddmr_canbus PUBLIC Threads::Threads)
 target_compile_definitions(dddmr_canbus PUBLIC ASIO_ENABLE_OLD_SERVICES)
@@ -64,30 +62,28 @@ target_include_directories(dddmr_canbus PUBLIC
     $<INSTALL_INTERFACE:include>
     PRIVATE src)
 
-# canbus_read_node
-add_executable(canbus_read_node
-  src/canbus_read_node.cpp
+# canbus_read_write_node
+add_executable(canbus_rw_node
+  src/canbus_rw_node.cpp
 )
-target_link_libraries(canbus_read_node
+target_link_libraries(canbus_rw_node
   #${PCL_LIBRARIES}
   dddmr_canbus
 )
-ament_target_dependencies(canbus_read_node
+ament_target_dependencies(canbus_rw_node
   ${dependencies}
 )
 
-#[[
-install(TARGETS
-  parameters
-  lidar_measurement_model_likelihood
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
-#]]
+
+#install(TARGETS
+#  ARCHIVE DESTINATION lib
+#  LIBRARY DESTINATION lib
+#  RUNTIME DESTINATION bin
+#)
+
 #install node
 install(TARGETS
-canbus_read_node
+  canbus_rw_node
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
