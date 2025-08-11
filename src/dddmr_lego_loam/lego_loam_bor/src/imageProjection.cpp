@@ -40,6 +40,7 @@ ImageProjection::ImageProjection(std::string name, Channel<ProjectionOut>& outpu
   clock_ = this->get_clock();
   
   tf_static_broadcaster_ = std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
+  _pub_projected_image = this->create_publisher<sensor_msgs::msg::Image>("projected_image", 1);
 
   _sub_laser_cloud = this->create_subscription<sensor_msgs::msg::PointCloud2>(
         "lslidar_point_cloud", 2,
@@ -314,6 +315,10 @@ void ImageProjection::cloudHandler(
 
 
 void ImageProjection::projectPointCloud() {
+  
+  //cv image
+  cv::Mat projected_image(_vertical_scans, _horizontal_scans, CV_16UC1);
+
   // range image projection
   const size_t cloudSize = _laser_cloud_in->points.size();
 
@@ -342,7 +347,7 @@ void ImageProjection::projectPointCloud() {
     //  continue;
     //}
 
-    int columnIdn = -round((horizonAngle - M_PI_2) / _ang_resolution_X) + _horizontal_scans * 0.5;
+    int columnIdn = -round((horizonAngle) / _ang_resolution_X) + _horizontal_scans * 0.5;
 
     if (columnIdn >= _horizontal_scans){
       columnIdn -= _horizontal_scans;
@@ -352,20 +357,27 @@ void ImageProjection::projectPointCloud() {
       continue;
     }
 
-    if (range < _minimum_detection_range || range>_maximum_detection_range){
+    if (range < _minimum_detection_range || range > _maximum_detection_range){
       continue;
     }
 
     _range_mat(rowIdn, columnIdn) = range;
-
+    
+    //@ generate projected_image
+    projected_image.at<unsigned short>(rowIdn, columnIdn) = static_cast<unsigned short>(range*1000);
     thisPoint.intensity = (float)rowIdn + (float)columnIdn / 10000.0;
-
     size_t index = columnIdn + rowIdn * _horizontal_scans;
     _full_cloud->points[index] = thisPoint;
     // the corresponding range of a point is saved as "intensity"
     _full_info_cloud->points[index] = thisPoint;
     _full_info_cloud->points[index].intensity = range;
   }
+
+  cv_bridge::CvImage img_bridge;
+  img_bridge.image = projected_image;
+  img_bridge.encoding = sensor_msgs::image_encodings::TYPE_16UC1;
+  sensor_msgs::msg::Image::SharedPtr msg = img_bridge.toImageMsg();
+  _pub_projected_image->publish(*msg);
 }
 
 void ImageProjection::findStartEndAngle() {

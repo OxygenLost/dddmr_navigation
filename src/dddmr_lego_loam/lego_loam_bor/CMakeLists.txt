@@ -31,6 +31,8 @@ find_package(pcl_conversions REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem serialization system thread date_time regex timer chrono)
 find_package(GTSAM REQUIRED)
 find_package(PCL 1.15 REQUIRED QUIET)
+find_package(OpenCV QUIET)
+find_package(cv_bridge REQUIRED)
 
 set(dependencies
   rclcpp
@@ -54,6 +56,7 @@ set(dependencies
   rosbag2_cpp
   rosbag2_storage
   cloud_msgs
+  cv_bridge
 )
 
 include_directories(
@@ -79,6 +82,7 @@ add_library(image_projection SHARED
 )
 target_link_libraries(image_projection
   ${PCL_LIBRARIES}
+  ${OpenCV_LIBRARIES}
 )
 ament_target_dependencies(image_projection
   ${dependencies}

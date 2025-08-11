@@ -15,6 +15,13 @@
 
 #include "tf2_ros/static_transform_broadcaster.h"
 
+// ros
+#include <cv_bridge/cv_bridge.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/opencv.hpp>
+
 class ImageProjection : public rclcpp::Node 
 {
   public:
@@ -84,6 +91,7 @@ class ImageProjection : public rclcpp::Node
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _pub_segmented_cloud_pure;
     rclcpp::Publisher<cloud_msgs::msg::CloudInfo>::SharedPtr _pub_segmented_cloud_info;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _pub_outlier_cloud;
+    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr _pub_projected_image;
     
     cloud_msgs::msg::CloudInfo _seg_msg;
 
