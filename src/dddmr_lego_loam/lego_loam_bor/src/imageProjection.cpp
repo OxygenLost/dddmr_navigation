@@ -364,7 +364,11 @@ void ImageProjection::projectPointCloud() {
     _range_mat(rowIdn, columnIdn) = range;
     
     //@ generate projected_image
-    projected_image.at<unsigned short>(rowIdn, columnIdn) = static_cast<unsigned short>(range*1000);
+    //@ the rowIdn for _range_mat is from top to bottom, which means the line 0 is the first row
+    //@ to visualize the depth image more intuitively, we make line 0 to the last rowIdn
+    // for columnIdn, we need to rotate it 180 degree
+    int viscolumnIdn = -round((horizonAngle + M_PI_2) / _ang_resolution_X) + _horizontal_scans * 0.5;
+    projected_image.at<unsigned short>(_vertical_scans-rowIdn, viscolumnIdn) = static_cast<unsigned short>(range*1000);
 
     thisPoint.intensity = (float)rowIdn + (float)columnIdn / 10000.0;
     size_t index = columnIdn + rowIdn * _horizontal_scans;

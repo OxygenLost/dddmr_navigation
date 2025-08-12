@@ -14,7 +14,7 @@ lego_loam_ip:
         odom_type: "laser_odometry"         #wheel_odometry/laser_odometry 
         baselink_frame: "base_link"
         num_vertical_scans: 96
-        num_horizontal_scans: 900
+        num_horizontal_scans: 450
         ground_scan_index: 48
         vertical_angle_bottom: -90.0          # degrees
         vertical_angle_top: 90.0            # degrees
