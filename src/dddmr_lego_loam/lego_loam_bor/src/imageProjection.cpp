@@ -347,7 +347,7 @@ void ImageProjection::projectPointCloud() {
     //  continue;
     //}
 
-    int columnIdn = -round((horizonAngle) / _ang_resolution_X) + _horizontal_scans * 0.5;
+    int columnIdn = -round((horizonAngle - M_PI_2) / _ang_resolution_X) + _horizontal_scans * 0.5;
 
     if (columnIdn >= _horizontal_scans){
       columnIdn -= _horizontal_scans;
@@ -365,6 +365,7 @@ void ImageProjection::projectPointCloud() {
     
     //@ generate projected_image
     projected_image.at<unsigned short>(rowIdn, columnIdn) = static_cast<unsigned short>(range*1000);
+
     thisPoint.intensity = (float)rowIdn + (float)columnIdn / 10000.0;
     size_t index = columnIdn + rowIdn * _horizontal_scans;
     _full_cloud->points[index] = thisPoint;
