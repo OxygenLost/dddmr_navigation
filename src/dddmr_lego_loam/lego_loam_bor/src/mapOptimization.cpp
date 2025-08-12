@@ -1519,7 +1519,6 @@ void MapOptimization::surfOptimization(int iterCount) {
     pointAssociateToMap(&pointOri, &pointSel);
     kdtreeSurfFromMap.nearestKSearch(pointSel, 5, pointSearchInd,
                                       pointSearchSqDis);
-
     if (pointSearchSqDis[4] < 1.0) {
       for (int j = 0; j < 5; j++) {
         matA0(j, 0) =
@@ -1566,12 +1565,13 @@ void MapOptimization::surfOptimization(int iterCount) {
         coeff.z = s * pc;
         coeff.intensity = s * pd2;
         if (s > 0.1) {
-          if(fabs(pb)<0.1){ //enforce LM toward to ground
-            s = 1.0;
-            coeff.x = s * pa;
-            coeff.y = s * pb;
-            coeff.z = s * pc;
-            coeff.intensity = s * pd2;
+          //@ increase weight of y direction to reduce pitch drift
+          if(fabs(pb)>fabs(pa) || fabs(pb)>fabs(pc)){
+            float s2 = 1.0;
+            coeff.x = s2 * pa;
+            coeff.y = s2 * pb;
+            coeff.z = s2 * pc;
+            coeff.intensity = s2 * pd2;
           }
           laserCloudOri->push_back(pointOri);
           coeffSel->push_back(coeff);
