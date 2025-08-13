@@ -317,8 +317,8 @@ void ImageProjection::cloudHandler(
 void ImageProjection::projectPointCloud() {
   
   //cv image
-  cv::Mat projected_image(_vertical_scans, _horizontal_scans, CV_16UC1);
-
+  cv::Mat projected_image(_vertical_scans, _horizontal_scans, CV_16UC1, cv::Scalar(0));
+  
   // range image projection
   const size_t cloudSize = _laser_cloud_in->points.size();
 
@@ -347,7 +347,7 @@ void ImageProjection::projectPointCloud() {
     //  continue;
     //}
 
-    int columnIdn = -round((horizonAngle - M_PI_2) / _ang_resolution_X) + _horizontal_scans * 0.5;
+    int columnIdn = -round((horizonAngle) / _ang_resolution_X) + _horizontal_scans * 0.5;
 
     if (columnIdn >= _horizontal_scans){
       columnIdn -= _horizontal_scans;
@@ -367,8 +367,11 @@ void ImageProjection::projectPointCloud() {
     //@ the rowIdn for _range_mat is from top to bottom, which means the line 0 is the first row
     //@ to visualize the depth image more intuitively, we make line 0 to the last rowIdn
     // for columnIdn, we need to rotate it 180 degree
-    int viscolumnIdn = -round((horizonAngle + M_PI_2) / _ang_resolution_X) + _horizontal_scans * 0.5;
-    projected_image.at<unsigned short>(_vertical_scans-rowIdn, viscolumnIdn) = static_cast<unsigned short>(range*1000);
+    int viscolumnIdn = -round((horizonAngle) / _ang_resolution_X) + _horizontal_scans * 0.5 + _horizontal_scans * 0.25;
+    if(viscolumnIdn>=_horizontal_scans)
+      viscolumnIdn = viscolumnIdn - _horizontal_scans;
+    if(rowIdn>0 && rowIdn<=_vertical_scans && viscolumnIdn<_horizontal_scans && viscolumnIdn>=0)
+      projected_image.at<unsigned short>(_vertical_scans-rowIdn, viscolumnIdn) = static_cast<unsigned short>(range*1000);
 
     thisPoint.intensity = (float)rowIdn + (float)columnIdn / 10000.0;
     size_t index = columnIdn + rowIdn * _horizontal_scans;

@@ -1564,14 +1564,23 @@ void MapOptimization::surfOptimization(int iterCount) {
         coeff.y = s * pb;
         coeff.z = s * pc;
         coeff.intensity = s * pd2;
+        //RCLCPP_INFO(this->get_logger(), "%.2f, %.2f, %.2f, %.2f", pa, pb, pc, s);
         if (s > 0.1) {
-          //@ increase weight of y direction to reduce pitch drift
-          if(fabs(pb)>fabs(pa) || fabs(pb)>fabs(pc)){
+          //@ increase weight of y direction (xz plane) to reduce pitch drift
+          if(fabs(pb)>3*fabs(pa)+3*fabs(pc)){
             float s2 = 1.0;
             coeff.x = s2 * pa;
             coeff.y = s2 * pb;
             coeff.z = s2 * pc;
-            coeff.intensity = s2 * pd2;
+            coeff.intensity = 0.0;
+          }
+          if(fabs(pointOri.y + tf2_trans_b2s_.getOrigin().z())<0.2){
+            //RCLCPP_INFO(this->get_logger(), "%.2f, %.2f", pointOri.y, tf2_trans_b2s_.getOrigin().z());
+            float s2 = 1.0;
+            coeff.x = s2 * pa;
+            coeff.y = s2 * pb;
+            coeff.z = s2 * pc;
+            coeff.intensity = 0.0;
           }
           laserCloudOri->push_back(pointOri);
           coeffSel->push_back(coeff);
@@ -1579,6 +1588,7 @@ void MapOptimization::surfOptimization(int iterCount) {
       }
     }
   }
+  //RCLCPP_INFO(this->get_logger(), "%d, %d", surf_cnt, surf_floor_cnt);
 }
 
 bool MapOptimization::LMOptimization(int iterCount) {
@@ -2000,6 +2010,7 @@ void MapOptimization::run() {
   tf2_trans_c2s_.setOrigin(tf2::Vector3(association.trans_c2s.transform.translation.x, association.trans_c2s.transform.translation.y, association.trans_c2s.transform.translation.z));
   tf2_trans_c2b_.setRotation(tf2::Quaternion(association.trans_c2b.transform.rotation.x, association.trans_c2b.transform.rotation.y, association.trans_c2b.transform.rotation.z, association.trans_c2b.transform.rotation.w));
   tf2_trans_c2b_.setOrigin(tf2::Vector3(association.trans_c2b.transform.translation.x, association.trans_c2b.transform.translation.y, association.trans_c2b.transform.translation.z));
+  tf2_trans_b2s_.mult(tf2_trans_c2b_.inverse(), tf2_trans_c2s_);
   wheelOdometry = association.wheel_odometry;
   broadcast_odom_tf_ = association.broadcast_odom_tf;
   
@@ -2050,6 +2061,7 @@ void MapOptimization::runWoLO(){
   tf2_trans_c2s_.setOrigin(tf2::Vector3(association.trans_c2s.transform.translation.x, association.trans_c2s.transform.translation.y, association.trans_c2s.transform.translation.z));
   tf2_trans_c2b_.setRotation(tf2::Quaternion(association.trans_c2b.transform.rotation.x, association.trans_c2b.transform.rotation.y, association.trans_c2b.transform.rotation.z, association.trans_c2b.transform.rotation.w));
   tf2_trans_c2b_.setOrigin(tf2::Vector3(association.trans_c2b.transform.translation.x, association.trans_c2b.transform.translation.y, association.trans_c2b.transform.translation.z));
+  tf2_trans_b2s_.mult(tf2_trans_c2b_.inverse(), tf2_trans_c2s_);
   wheelOdometry = association.wheel_odometry;
   broadcast_odom_tf_ = association.broadcast_odom_tf;
 
