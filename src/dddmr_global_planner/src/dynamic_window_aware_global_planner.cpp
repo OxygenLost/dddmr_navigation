@@ -198,7 +198,7 @@ void DWA_GlobalPlanner::determineDWAPlan(){
   bool dwa_goal_clear = false;
   double look_ahead_step = 0.0;
   int dwa_pivot = 0;
-  while(!dwa_goal_clear){
+  while(rclcpp::ok() && !dwa_goal_clear){
 
     double accumulative_distance = 0.0;
     int pivot = indices[0];
@@ -231,7 +231,7 @@ void DWA_GlobalPlanner::determineDWAPlan(){
     if(pointIdxRadiusSearch.empty()){
       look_ahead_step+=1.0;
       dwa_goal_clear = false;
-      RCLCPP_INFO(this->get_logger(), "No ground is found for DWA goal at: %.2f, %.2f, %.2f", pcl_global_path_->points[pivot].x, pcl_global_path_->points[pivot].y, pcl_global_path_->points[pivot].z);
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000,  "No ground is found for DWA goal at: %.2f, %.2f, %.2f", pcl_global_path_->points[pivot].x, pcl_global_path_->points[pivot].y, pcl_global_path_->points[pivot].z);
     }
     else{
       for(auto it=pointIdxRadiusSearch.begin();it!=pointIdxRadiusSearch.end();it++){
@@ -241,7 +241,7 @@ void DWA_GlobalPlanner::determineDWAPlan(){
         if(dGraphValue<inscribed_radius){
           look_ahead_step+=1.0;
           dwa_goal_clear = false;
-          RCLCPP_INFO(this->get_logger(), "DWA goal is blocked at: %.2f, %.2f, %.2f", pcl_global_path_->points[pivot].x, pcl_global_path_->points[pivot].y, pcl_global_path_->points[pivot].z);
+          RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "DWA goal is blocked at: %.2f, %.2f, %.2f", pcl_global_path_->points[pivot].x, pcl_global_path_->points[pivot].y, pcl_global_path_->points[pivot].z);
           break;
         }
         else{
