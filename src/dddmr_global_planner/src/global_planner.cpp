@@ -89,6 +89,10 @@ void GlobalPlanner::initial(const std::shared_ptr<perception_3d::Perception3D_RO
   this->get_parameter("turning_weight", turning_weight_);
   RCLCPP_INFO(this->get_logger(), "turning_weight: %.2f", turning_weight_);    
 
+  declare_parameter("enable_detail_log", rclcpp::ParameterValue(false));
+  this->get_parameter("enable_detail_log", enable_detail_log_);
+  RCLCPP_INFO(this->get_logger(), "enable_detail_log: %d", enable_detail_log_);    
+
   tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   action_server_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   //@Initialize transform listener and broadcaster
@@ -393,10 +397,17 @@ bool GlobalPlanner::getStartGoalID(const geometry_msgs::msg::PoseStamped& start,
     }
     return false;
   }
-
-  RCLCPP_WARN(this->get_logger(), "Selected goal: %.2f, %.2f, %.2f, Nearest-> id: %u, x: %.2f, y: %.2f, z: %.2f", 
-    goal.pose.position.x, goal.pose.position.y, goal.pose.position.z, pointIdxRadiusSearch_goal[0], 
-    pcl_ground_->points[pointIdxRadiusSearch_goal[0]].x, pcl_ground_->points[pointIdxRadiusSearch_goal[0]].y, pcl_ground_->points[pointIdxRadiusSearch_goal[0]].z);
+  
+  if(enable_detail_log_){
+    RCLCPP_WARN(this->get_logger(), "Selected goal: %.2f, %.2f, %.2f, Nearest-> id: %u, x: %.2f, y: %.2f, z: %.2f", 
+      goal.pose.position.x, goal.pose.position.y, goal.pose.position.z, pointIdxRadiusSearch_goal[0], 
+      pcl_ground_->points[pointIdxRadiusSearch_goal[0]].x, pcl_ground_->points[pointIdxRadiusSearch_goal[0]].y, pcl_ground_->points[pointIdxRadiusSearch_goal[0]].z);
+  }
+  else{
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *clock_, 5000, "Selected goal: %.2f, %.2f, %.2f, Nearest-> id: %u, x: %.2f, y: %.2f, z: %.2f", 
+      goal.pose.position.x, goal.pose.position.y, goal.pose.position.z, pointIdxRadiusSearch_goal[0], 
+      pcl_ground_->points[pointIdxRadiusSearch_goal[0]].x, pcl_ground_->points[pointIdxRadiusSearch_goal[0]].y, pcl_ground_->points[pointIdxRadiusSearch_goal[0]].z);
+  }
 
   //--------------------------------------------------------------------------------------
   //@Get start ID
@@ -411,11 +422,18 @@ bool GlobalPlanner::getStartGoalID(const geometry_msgs::msg::PoseStamped& start,
     RCLCPP_WARN(this->get_logger(), "Start is not found.");
     return false;
   }
+  
+  if(enable_detail_log_){
+    RCLCPP_WARN(this->get_logger(), "Selected start: %.2f, %.2f, %.2f, Nearest-> id: %u, x: %.2f, y: %.2f, z: %.2f", 
+      start.pose.position.x, start.pose.position.y, start.pose.position.z, pointIdxRadiusSearch_start[0], 
+      pcl_ground_->points[pointIdxRadiusSearch_start[0]].x, pcl_ground_->points[pointIdxRadiusSearch_start[0]].y, pcl_ground_->points[pointIdxRadiusSearch_start[0]].z);
+  }
+  else{
+    RCLCPP_WARN_THROTTLE(this->get_logger(), *clock_, 5000, "Selected start: %.2f, %.2f, %.2f, Nearest-> id: %u, x: %.2f, y: %.2f, z: %.2f", 
+      start.pose.position.x, start.pose.position.y, start.pose.position.z, pointIdxRadiusSearch_start[0], 
+      pcl_ground_->points[pointIdxRadiusSearch_start[0]].x, pcl_ground_->points[pointIdxRadiusSearch_start[0]].y, pcl_ground_->points[pointIdxRadiusSearch_start[0]].z);
 
-  RCLCPP_WARN(this->get_logger(), "Selected start: %.2f, %.2f, %.2f, Nearest-> id: %u, x: %.2f, y: %.2f, z: %.2f", 
-    start.pose.position.x, start.pose.position.y, start.pose.position.z, pointIdxRadiusSearch_start[0], 
-    pcl_ground_->points[pointIdxRadiusSearch_start[0]].x, pcl_ground_->points[pointIdxRadiusSearch_start[0]].y, pcl_ground_->points[pointIdxRadiusSearch_start[0]].z);
-
+  }
   start_id = pointIdxRadiusSearch_start[0];
 
   goal_id = pointIdxRadiusSearch_goal[0];
@@ -461,11 +479,17 @@ nav_msgs::msg::Path GlobalPlanner::makeROSPlan(const geometry_msgs::msg::PoseSta
   }
 
   if(path.empty()){
-    RCLCPP_WARN(this->get_logger(), "No path found from: %u to %u", start_id, goal_id);
+    if(enable_detail_log_)
+      RCLCPP_WARN(this->get_logger(), "No path found from: %u to %u", start_id, goal_id);
+    else
+      RCLCPP_WARN_THROTTLE(this->get_logger(), *clock_, 5000, "No path found from: %u to %u", start_id, goal_id);
     return ros_path;
   }
   else{
-    RCLCPP_INFO(this->get_logger(), "Path found from: %u to %u", start_id, goal_id);
+    if(enable_detail_log_)
+      RCLCPP_INFO(this->get_logger(), "Path found from: %u to %u", start_id, goal_id);
+    else
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 5000, "Path found from: %u to %u", start_id, goal_id);
     getROSPath(path, ros_path);
     ros_path.poses.push_back(goal);
     return ros_path;

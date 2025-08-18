@@ -223,3 +223,4 @@ perception_3d_global:
 global_planner:
   ros__parameters:
     turning_weight: 0.1 #Punish the zig-zag path
+    enable_detail_log: false

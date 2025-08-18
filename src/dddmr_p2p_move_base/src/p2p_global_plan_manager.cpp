@@ -134,9 +134,15 @@ void P2PGlobalPlanManager::queryThread(){
 void P2PGlobalPlanManager::global_planner_client_goal_response_callback(const rclcpp_action::ClientGoalHandle<dddmr_sys_core::action::GetPlan>::SharedPtr & goal_handle)
 {
   if (!goal_handle) {
-    RCLCPP_ERROR(this->get_logger(), "Goal was rejected by: %s", global_planner_action_name_.c_str());
+    if(global_plan_query_frequency_>2)
+      RCLCPP_ERROR_THROTTLE(this->get_logger(), *clock_, 5000, "Goal was rejected by: %s", global_planner_action_name_.c_str());
+    else
+      RCLCPP_ERROR(this->get_logger(), "Goal was rejected by: %s", global_planner_action_name_.c_str());
   } else {
-    RCLCPP_INFO(this->get_logger(), "Goal accepted by: %s, waiting for result", global_planner_action_name_.c_str());
+    if(global_plan_query_frequency_>2)
+      RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 5000, "Goal accepted by: %s, waiting for result", global_planner_action_name_.c_str());
+    else
+      RCLCPP_INFO(this->get_logger(), "Goal accepted by: %s, waiting for result", global_planner_action_name_.c_str()); 
   }
 }
 

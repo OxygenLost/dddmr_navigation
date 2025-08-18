@@ -124,7 +124,8 @@ class GlobalPlanner : public rclcpp::Node {
       bool has_initialized_;
       
       double turning_weight_;
-      
+      bool enable_detail_log_;
+
       size_t static_ground_size_;
       
       /*Original point cloud*/

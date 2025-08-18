@@ -114,7 +114,8 @@ class DWA_GlobalPlanner : public rclcpp::Node {
       nav_msgs::msg::Path global_path_;
       nav_msgs::msg::Path global_dwa_path_;
       double look_ahead_distance_;
-
+      double recompute_frequency_;
+      
       pcl::KdTreeFLANN<pcl::PointXYZ>::Ptr kdtree_global_path_; 
       pcl::PointCloud<pcl::PointXYZ>::Ptr pcl_global_path_;
       
