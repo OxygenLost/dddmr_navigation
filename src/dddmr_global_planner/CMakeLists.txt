@@ -101,6 +101,16 @@ ament_target_dependencies(global_planner_node
   ${dependencies}
 )
 
+#dummy_pc_publisher
+add_executable(dummy_pc_publisher
+  test/dummy_pc_pub.cpp
+)
+target_link_libraries(dummy_pc_publisher 
+  ${PCL_LIBRARIES}
+)
+ament_target_dependencies(dummy_pc_publisher
+  ${dependencies}
+)
 
 install(TARGETS
   a_star_on_graph
@@ -114,6 +124,7 @@ install(TARGETS
 #install node
 install(TARGETS
   global_planner_node
+  dummy_pc_publisher
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
