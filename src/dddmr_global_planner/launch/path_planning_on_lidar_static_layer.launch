@@ -13,6 +13,7 @@
   </node>
 
   <node pkg="global_planner" exec="dummy_pc_publisher" output="screen" respawn="false" />
+  <node pkg="global_planner" exec="dwa_global_planner_client.py" output="screen" respawn="false" />
 
   <!--- TF -->
   <node pkg="tf2_ros" exec="static_transform_publisher" name="map2baselink" args="-3.73 3.18 -0.234 0.0 0.0 0.0 /map /base_link" />

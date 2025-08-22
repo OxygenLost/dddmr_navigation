@@ -143,6 +143,7 @@ install(DIRECTORY
 # Install Python executables
 install(PROGRAMS
   script/example_client.py
+  script/dwa_global_planner_client.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
