@@ -102,11 +102,12 @@ bool AstarList::isFrontierEmpty(){
 //@----------------------------------------------------------------------------------------
 
 A_Star_on_Graph::A_Star_on_Graph(pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up, 
-                                  std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros){
+                                  std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros,
+                                  double a_star_expanding_radius){
   
   perception_ros_ = perception_ros;
-
   pc_original_z_up_ = pc_original_z_up;
+  a_star_expanding_radius_ = a_star_expanding_radius;
   ASLS_ = new AstarList(pc_original_z_up_);
 }
 
@@ -195,7 +196,7 @@ void A_Star_on_Graph::getPath(
     pcl::PointXYZI pcl_now = pc_original_z_up_->points[current_node.self_index];
     std::vector<int> pointIdxRadiusSearch;
     std::vector<float> pointRadiusSquaredDistance;
-    ASLS_->kdtree_ground_->radiusSearch(pcl_now, 1.0, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+    ASLS_->kdtree_ground_->radiusSearch(pcl_now, a_star_expanding_radius_, pointIdxRadiusSearch, pointRadiusSquaredDistance);
 
     //@dealing with orphan node
     if(pointIdxRadiusSearch.size()<8){
