@@ -155,10 +155,12 @@ void MultiLayerSpinningLidar::onInitialize()
   pub_current_segmentation_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/current_segmentation", 2);
   pub_gbl_marking_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/global_marking", 2);
   pub_dGraph_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/dGraph", 2);
+  pub_lethal_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/lethal", 2);
 
   pub_casting_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(pre_topic_name + "/tracing_objects", 2);
 
-  pct_marking_ = std::make_shared<Marking>(&dGraph_, gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+  pct_marking_ = std::make_shared<Marking>(&dGraph_, 
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
   get_first_tf_ = false;
   
   marking_pub_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -271,6 +273,29 @@ void MultiLayerSpinningLidar::cbSensor(const sensor_msgs::msg::PointCloud2::Shar
     pub_current_observation_->publish(ros_pc2_msg);
   }
 
+}
+
+void MultiLayerSpinningLidar::updateLethalPointCloud(){
+
+  std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
+  
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+  for(auto it=pct_marking_->lethal_map_.begin(); it!=pct_marking_->lethal_map_.end(); it++){
+    pcl::PointXYZI ipt;
+    ipt.x = shared_data_->pcl_ground_->points[(*it).first].x;
+    ipt.y = shared_data_->pcl_ground_->points[(*it).first].y;
+    ipt.z = shared_data_->pcl_ground_->points[(*it).first].z;
+    current_lethal_->push_back(ipt);
+    //RCLCPP_INFO(node_->get_logger(), "Lethal: %.2f, %.2f, %2.f", ipt.x, ipt.y, ipt.z);
+  }
+
+  if(pub_lethal_->get_subscription_count()>0){
+    sensor_msgs::msg::PointCloud2 ros_pc2_msg;
+    current_lethal_->header.frame_id = gbl_utils_->getGblFrame();
+    pcl::toROSMsg(*current_lethal_, ros_pc2_msg);
+    pub_lethal_->publish(ros_pc2_msg);
+  }
+  
 }
 
 void MultiLayerSpinningLidar::selfMark(){
@@ -802,7 +827,8 @@ void MultiLayerSpinningLidar::resetdGraph(){
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s starts to reset dynamic graph.", name_.c_str());
   dGraph_.clear();
   dGraph_.initial(shared_data_->static_ground_size_, gbl_utils_->getMaxObstacleDistance());
-  pct_marking_ = std::make_shared<Marking>(&dGraph_, gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+  pct_marking_ = std::make_shared<Marking>(&dGraph_, 
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s done dynamic graph regeneration.", name_.c_str());
 }
 

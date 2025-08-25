@@ -100,8 +100,8 @@ class Marking{
 
   public:
 
-    Marking(DynamicGraph* dg, double inflation_radius, pcl::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_ground, double xy_resolution, double height_resolution):
-      dGraph_(dg),inflation_radius_(inflation_radius),kdtree_ground_(kdtree_ground),xy_resolution_(xy_resolution),height_resolution_(height_resolution){};
+    Marking(DynamicGraph* dg, double inscribed_radius, double inflation_radius, pcl::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_ground, double xy_resolution, double height_resolution):
+      dGraph_(dg), inscribed_radius_(inscribed_radius), inflation_radius_(inflation_radius), kdtree_ground_(kdtree_ground), xy_resolution_(xy_resolution), height_resolution_(height_resolution){};
     
     ~Marking();
 
@@ -128,18 +128,22 @@ class Marking{
       return dGraph_->getValue(index);
     };
 
+    //@ groud pcl index, distance to lehal. Everything within this map will be used for line-of-sight check
+    std::map<int, double> lethal_map_;
+    
   private:
-    /*Voxel structure*/
+    //@ Voxel structure
     marking_t marking_;
 
-    /*For dynamic_graph, because kdd find int index, we use int*/
+    //@ For dynamic_graph, because kdd find int index, we use int
     std::map<pcl::PointCloud<pcl::PointXYZI>::Ptr, std::unordered_map<int, float>> marking2node_;  
 
     DynamicGraph* dGraph_;  
     
     double xy_resolution_, height_resolution_;
     double inflation_radius_;
-
+    double inscribed_radius_;
+    
     pcl::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_ground_;
 
     rclcpp::Time last_observation_time_;

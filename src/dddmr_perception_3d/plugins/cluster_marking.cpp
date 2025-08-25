@@ -107,7 +107,10 @@ void Marking::addPCPtr(const double cx, const double cy, const double cz,
   marking_[x][y][z].nodes_of_min_distance_ = nodes_of_min_distance;
   
   for(auto id=nodes_of_min_distance.begin();id!=nodes_of_min_distance.end();id++){
-    dGraph_->setValue((*id).first,(*id).second);
+    //RCLCPP_INFO(rclcpp::get_logger("ClusterMarking"), "%.2f", (*id).second);
+    dGraph_->setValue((*id).first, (*id).second);
+    if((*id).second<=inscribed_radius_)
+      lethal_map_[(*id).first] = (*id).second;
   }
   
 }
@@ -118,6 +121,8 @@ void Marking::removePCPtr(perception_3d::per_marking& per_marking){
 
   for(auto id=nodes_of_min_distance.begin();id!=nodes_of_min_distance.end();id++){
     dGraph_->clearValue((*id).first, 9999.0);
+    if((*id).second<=inscribed_radius_)
+      lethal_map_.erase((*id).first);
   }
 
   per_marking.pc_.reset();

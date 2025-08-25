@@ -215,6 +215,10 @@ void SpeedLimitLayer::getBoundingBox(perception_3d::SpeedZone& a_zone){
 
 }
 
+void SpeedLimitLayer::updateLethalPointCloud(){
+  
+}
+
 void SpeedLimitLayer::selfMark(){
   
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);

@@ -46,6 +46,9 @@ void NothingLayer::onInitialize()
   sensor_current_observation_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
+void NothingLayer::updateLethalPointCloud(){
+}
+
 void NothingLayer::selfMark(){
 }
 

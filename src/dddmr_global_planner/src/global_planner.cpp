@@ -451,6 +451,13 @@ void GlobalPlanner::makePlan(const std::shared_ptr<rclcpp_action::ServerGoalHand
   //@get goal and start
   const auto goal = goal_handle->get_goal();
 
+  if(!perception_3d_ros_->getSharedDataPtr()->is_static_layer_ready_){
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Waiting for static layer");
+    auto result = std::make_shared<dddmr_sys_core::action::GetPlan::Result>();
+    goal_handle->abort(result);
+    return;
+  }
+
   geometry_msgs::msg::PoseStamped start;
   perception_3d_ros_->getGlobalPose(start);
 

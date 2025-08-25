@@ -82,10 +82,9 @@ void StackedPerception::doClear_then_Mark(){
   for (std::vector<std::shared_ptr<Sensor> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
        ++plugin)
   {
-
     (*plugin)->selfClear();
     (*plugin)->selfMark();
-
+    (*plugin)->updateLethalPointCloud();
   }
 
 }

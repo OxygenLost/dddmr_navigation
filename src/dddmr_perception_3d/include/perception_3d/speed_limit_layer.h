@@ -117,11 +117,13 @@ class SpeedZone{
 class SpeedLimitLayer: public Sensor{
 
   public:
+  
     SpeedLimitLayer();
     ~SpeedLimitLayer();
     virtual void onInitialize();
     virtual void selfClear();
     virtual void selfMark();
+    virtual void updateLethalPointCloud();
     virtual pcl::PointCloud<pcl::PointXYZI>::Ptr getObservation();
     virtual void resetdGraph();
     virtual double get_dGraphValue(const unsigned int index);

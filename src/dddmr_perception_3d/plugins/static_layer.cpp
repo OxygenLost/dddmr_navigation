@@ -167,6 +167,8 @@ void StaticLayer::cbGround(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
  
 }
 
+void StaticLayer::updateLethalPointCloud(){
+}
 
 void StaticLayer::selfMark(){
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);

@@ -49,6 +49,9 @@ void PathBlockedStrategy::onInitialize()
 
 }
 
+void PathBlockedStrategy::updateLethalPointCloud(){
+}
+
 void PathBlockedStrategy::selfMark(){
 
   //@initial opinion as pass

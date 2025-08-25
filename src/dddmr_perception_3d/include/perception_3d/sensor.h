@@ -72,6 +72,8 @@ class Sensor{
 
     virtual bool isCurrent() = 0;
     
+    virtual void updateLethalPointCloud(){}
+
     perception_3d::PerceptionOpinion getOpinion(){return opinion_;}
 
     std::shared_ptr<GlobalUtils> getGlobalUtils(){return gbl_utils_;}
@@ -91,17 +93,21 @@ class Sensor{
     std::string name_;
     std::shared_ptr<perception_3d::GlobalUtils> gbl_utils_;
     std::shared_ptr<perception_3d::SharedData> shared_data_;
-    /*For TF affine3d*/
+   
+    //@ For TF affine3d
     geometry_msgs::msg::TransformStamped trans_b2s_, trans_gbl2b_;
 
-    /*Graph, basically like the costmap_2d char*/
+    //@ Graph, basically like the costmap_2d char
     DynamicGraph dGraph_;
 
-    /*current observation for local planner*/
+    //@ current observation for local planner
     pcl::PointCloud<pcl::PointXYZI>::Ptr sensor_current_observation_;
 
     //@ opinion of plugin, default is pass
     PerceptionOpinion opinion_;
+    
+    //@ lethal point cloud, that will be merged together for line-of-sight check
+    pcl::PointCloud<pcl::PointXYZI>::Ptr current_lethal_;
 
 };
 

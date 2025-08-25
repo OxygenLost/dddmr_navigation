@@ -214,6 +214,12 @@ void NoEntryLayer::getBoundingBox(perception_3d::NoEntryZone& a_zone){
 
 }
 
+void NoEntryLayer::updateLethalPointCloud(){
+
+  //@ current_lethal_ is updated in marking
+
+}
+
 void NoEntryLayer::selfMark(){
   
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
@@ -268,6 +274,7 @@ void NoEntryLayer::selfMark(){
         if(shared_data_->kdtree_ground_->radiusSearch(ipt, inflation_distance_, pointIdxRadiusSearch, pointRadiusSquaredDistance)>0){
           for(int i=0;i<pointIdxRadiusSearch.size();i++){
             dGraph_.setValue(pointIdxRadiusSearch[i], sqrt(pointRadiusSquaredDistance[i]));
+            current_lethal_->push_back(ipt);
           }
         }
       }

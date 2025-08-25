@@ -32,7 +32,7 @@ private:
 
 void PointCloudPublisher::publish_point_cloud(){
   
-  if(clock_->now() - last_pub_>rclcpp::Duration::from_seconds(10.0)){
+  if(clock_->now() - last_pub_>rclcpp::Duration::from_seconds(15.0)){
     pub_pc_ = !pub_pc_;
     last_pub_  = clock_->now();
   }
@@ -41,7 +41,7 @@ void PointCloudPublisher::publish_point_cloud(){
   pcl::PointCloud<pcl::PointXYZI> pc;
   
   if(pub_pc_){
-    for(float x=-0.2; x<=0.2; x+=0.1){
+    for(float x=-0.1; x<=0.1; x+=0.1){
       for(float y=-5.5; y<=5.5; y+=0.1){
         for(float z=0.0; z<=1.5; z+=0.1){
           pcl::PointXYZI a_pt;

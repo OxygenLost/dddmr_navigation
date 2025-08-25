@@ -99,6 +99,7 @@ class MultiLayerSpinningLidar: public Sensor{
     virtual void onInitialize();
     virtual void selfClear();
     virtual void selfMark();
+    virtual void updateLethalPointCloud();
     virtual pcl::PointCloud<pcl::PointXYZI>::Ptr getObservation();
     virtual void resetdGraph();
     virtual double get_dGraphValue(const unsigned int index);
@@ -168,6 +169,7 @@ class MultiLayerSpinningLidar: public Sensor{
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr pub_casting_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_gbl_marking_;
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_dGraph_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_lethal_;
     
     /**/
     pcl::PointCloud<pcl::PointXYZI>::Ptr pc_current_window_;
