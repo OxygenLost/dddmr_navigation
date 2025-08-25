@@ -186,7 +186,10 @@ void A_Star_on_Graph::getPath(
   double inscribed_radius = perception_ros_->getGlobalUtils()->getInscribedRadius();
   double inflation_descending_rate = perception_ros_->getGlobalUtils()->getInflationDescendingRate();
   double max_obstacle_distance = perception_ros_->getGlobalUtils()->getMaxObstacleDistance();
-
+  
+  perception_ros_->getStackedPerception()->aggregateLethal();
+  //@ generate kd-tree and handle no point cloud edge case
+  
   while(!ASLS_->isFrontierEmpty()){ 
     /*Pop minimum F, we leverage prior queue, so we dont need to loop frontier everytime*/
     current_node = ASLS_->getNode_wi_MinimumF();

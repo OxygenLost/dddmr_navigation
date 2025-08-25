@@ -139,6 +139,21 @@ void StackedPerception::aggregateObservations(){
 
 }
 
+void StackedPerception::aggregateLethal(){
+  
+  //@ before calling this function, make sure we mutex lock, i.e.
+  shared_data_->aggregate_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+
+  for (std::vector<std::shared_ptr<Sensor> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
+       ++plugin)
+  {
+    //@aggregate observation for perception
+    (*shared_data_->aggregate_lethal_) += (*(*plugin)->getObservation());
+    shared_data_->aggregate_lethal_->header.frame_id = (*plugin)->getGlobalUtils()->getGblFrame();
+  }
+
+}
+
 std::vector<perception_3d::PerceptionOpinion> StackedPerception::getOpinions(){
   
   std::vector<perception_3d::PerceptionOpinion> tmp_vector;

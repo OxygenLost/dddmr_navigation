@@ -69,7 +69,10 @@ class StackedPerception{
 
     /*Aggregate observation pointers for local planner*/
     void aggregateObservations();
-    
+
+    /*Aggregate lethal for line-of-sight check in global planner*/
+    void aggregateLethal();
+
     /*Collect all opinions and return as a vector*/
     std::vector<perception_3d::PerceptionOpinion> getOpinions();
     
