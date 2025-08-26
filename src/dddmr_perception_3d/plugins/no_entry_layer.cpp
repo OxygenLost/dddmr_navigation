@@ -45,6 +45,8 @@ NoEntryLayer::~NoEntryLayer(){
 
 void NoEntryLayer::onInitialize()
 { 
+  
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 
   rclcpp::QoS map_qos(10);  // initialize to default
   map_qos.transient_local();
@@ -309,9 +311,9 @@ bool NoEntryLayer::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr NoEntryLayer::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr NoEntryLayer::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

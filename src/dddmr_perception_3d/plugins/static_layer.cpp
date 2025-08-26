@@ -36,7 +36,7 @@ namespace perception_3d
 {
 
 StaticLayer::StaticLayer(){
-
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
 StaticLayer::~StaticLayer(){
@@ -375,9 +375,9 @@ bool StaticLayer::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr StaticLayer::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr StaticLayer::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

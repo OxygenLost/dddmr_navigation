@@ -36,6 +36,7 @@ namespace perception_3d
 {
 
 NothingLayer::NothingLayer(){
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
 NothingLayer::~NothingLayer(){
@@ -70,5 +71,7 @@ bool NothingLayer::isCurrent(){
 pcl::PointCloud<pcl::PointXYZI>::Ptr NothingLayer::getObservation(){
   return sensor_current_observation_;
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr NothingLayer::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

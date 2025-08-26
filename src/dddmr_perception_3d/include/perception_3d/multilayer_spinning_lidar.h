@@ -101,6 +101,7 @@ class MultiLayerSpinningLidar: public Sensor{
     virtual void selfMark();
     virtual void updateLethalPointCloud();
     virtual pcl::PointCloud<pcl::PointXYZI>::Ptr getObservation();
+    pcl::PointCloud<pcl::PointXYZI>::Ptr getLethal();
     virtual void resetdGraph();
     virtual double get_dGraphValue(const unsigned int index);
     virtual bool isCurrent();

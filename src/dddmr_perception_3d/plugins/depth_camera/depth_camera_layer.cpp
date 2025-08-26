@@ -61,7 +61,8 @@ void DepthCameraLayer::onInitialize()
   marking_height_ = -1.0;
   pcl_msg_gbl_.reset(new pcl::PointCloud<pcl::PointXYZI>);
   pc_current_window_.reset(new pcl::PointCloud<pcl::PointXYZI>);
-
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+  
   node_->declare_parameter(name_ + ".is_local_planner", rclcpp::ParameterValue(false));
   node_->get_parameter(name_ + ".is_local_planner", is_local_planner_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "is_local_planner: %d", is_local_planner_);
@@ -659,6 +660,10 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr DepthCameraLayer::getObservation(){
   sensor_current_observation_.reset(new pcl::PointCloud<pcl::PointXYZI>());
   aggregatePointCloudFromObservations(sensor_current_observation_);
   return sensor_current_observation_;
+}
+
+pcl::PointCloud<pcl::PointXYZI>::Ptr DepthCameraLayer::getLethal(){
+  return current_lethal_;
 }
 
 void DepthCameraLayer::resetdGraph(){

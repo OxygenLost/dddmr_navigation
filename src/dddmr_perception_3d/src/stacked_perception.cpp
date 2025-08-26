@@ -148,7 +148,7 @@ void StackedPerception::aggregateLethal(){
        ++plugin)
   {
     //@aggregate observation for perception
-    (*shared_data_->aggregate_lethal_) += (*(*plugin)->getObservation());
+    (*shared_data_->aggregate_lethal_) += (*(*plugin)->getLethal());
     shared_data_->aggregate_lethal_->header.frame_id = (*plugin)->getGlobalUtils()->getGblFrame();
   }
 

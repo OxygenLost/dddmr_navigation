@@ -56,6 +56,7 @@ void MultiLayerSpinningLidar::ptrInitial(){
   pcl_msg_.reset(new pcl::PointCloud<pcl::PointXYZ>);
   pcl_msg_gbl_.reset(new pcl::PointCloud<pcl::PointXYZ>);
   pc_current_window_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
 void MultiLayerSpinningLidar::onInitialize()
@@ -849,9 +850,11 @@ bool MultiLayerSpinningLidar::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr MultiLayerSpinningLidar::getObservation(){
-
   return sensor_current_observation_;
+}
 
+pcl::PointCloud<pcl::PointXYZI>::Ptr MultiLayerSpinningLidar::getLethal(){
+  return current_lethal_;
 }
 
 }//end of name space

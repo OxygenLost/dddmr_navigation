@@ -104,6 +104,10 @@ class A_Star_on_Graph{
       void setupTurningWeight(double m_weight){turning_weight_ = m_weight;}
 
     private:
+      
+      //@ kd-tree for line-of-sight
+      nanoflann::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_lethal_;
+
       pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up_;
 
       /*Provide dynamic graph for obstacle avoidance*/
@@ -120,5 +124,7 @@ class A_Star_on_Graph{
 
       double getThetaFromParent2Expanding(pcl::PointXYZI m_pcl_current_parent, pcl::PointXYZI m_pcl_current, pcl::PointXYZI m_pcl_expanding);
       double getPitchFromParent2Expanding(pcl::PointXYZI m_pcl_current_parent, pcl::PointXYZI m_pcl_current, pcl::PointXYZI m_pcl_expanding);
+
+      bool isLineOfSightClear(pcl::PointXYZI& pcl_current, pcl::PointXYZI& pcl_expanding, double inscribed_radius);
 };
 

@@ -36,7 +36,7 @@ namespace perception_3d
 {
 
 SpeedLimitLayer::SpeedLimitLayer(){
-
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
 SpeedLimitLayer::~SpeedLimitLayer(){
@@ -313,9 +313,9 @@ bool SpeedLimitLayer::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr SpeedLimitLayer::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr SpeedLimitLayer::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

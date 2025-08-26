@@ -65,6 +65,7 @@ class Sensor{
     virtual void selfMark(){}
 
     virtual pcl::PointCloud<pcl::PointXYZI>::Ptr getObservation() = 0;
+    virtual pcl::PointCloud<pcl::PointXYZI>::Ptr getLethal() = 0;
 
     virtual void resetdGraph(){}
 

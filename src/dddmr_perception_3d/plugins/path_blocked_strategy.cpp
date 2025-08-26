@@ -36,6 +36,7 @@ namespace perception_3d
 {
 
 PathBlockedStrategy::PathBlockedStrategy(){
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
   return;
 }
 
@@ -116,9 +117,9 @@ bool PathBlockedStrategy::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr PathBlockedStrategy::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr PathBlockedStrategy::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

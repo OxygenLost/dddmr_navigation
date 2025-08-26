@@ -51,6 +51,7 @@ class DepthCameraLayer: public Sensor{
     void selfMark();
     void updateLethalPointCloud();
     pcl::PointCloud<pcl::PointXYZI>::Ptr getObservation();
+    pcl::PointCloud<pcl::PointXYZI>::Ptr getLethal();
     void resetdGraph();
     double get_dGraphValue(const unsigned int index);
     bool isCurrent();
