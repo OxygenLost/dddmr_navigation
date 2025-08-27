@@ -1,7 +1,7 @@
 FROM dddmr:x64
 
 #install ROS2-based gz dependencies
-RUN apt install -y ros-humble-gazebo-ros2-control
+RUN apt update && apt install -y ros-humble-gazebo-ros2-control
 RUN apt install -y ros-humble-xacro
 RUN apt install -y ros-humble-robot-localization
 RUN apt install -y ros-humble-ros2-controllers
