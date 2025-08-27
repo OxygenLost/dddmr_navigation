@@ -1,0 +1,33 @@
+<launch>
+  
+  <let name="use_sim" value="true"/>
+
+  <!--name argument is not required, because it will overwrite all node name in the exec-->
+  <node pkg="lego_loam_bor" exec="lego_loam" output="screen" respawn="false">
+    <param from="$(find-pkg-share p2p_move_base)/config/go2_mapping.yaml" />
+    <remap from="/lslidar_point_cloud" to="/velodyne_points"/>
+    <remap from="/odom" to="/odom"/>
+    <param name="use_sim_time" value="$(var use_sim)"/>
+  </node>
+  
+  <!--name argument is not required, because it will overwrite all node name in the exec-->
+  <node pkg="global_planner" exec="global_planner_node" output="screen" respawn="false">
+    <param from="$(find-pkg-share p2p_move_base)/config/go2_mapping.yaml" />
+    <param name="use_sim_time" value="$(var use_sim)"/>
+  </node>
+
+  <!--name argument is not required, because it will overwrite all node name in the exec-->
+  <node pkg="p2p_move_base" exec="p2p_move_base_node" output="screen" respawn="false">
+    <param from="$(find-pkg-share p2p_move_base)/config/go2_mapping.yaml" />
+    <param name="use_sim_time" value="$(var use_sim)"/>
+  </node>
+
+  <node pkg="p2p_move_base" exec="clicked2goal.py" output="screen" respawn="false">
+    <param name="use_sim_time" value="$(var use_sim)"/>
+  </node>
+
+  <node pkg="rviz2" exec="rviz2" output="screen" respawn="false" args="-d $(find-pkg-share p2p_move_base)/rviz/go2_mapping.rviz">
+    <param name="use_sim_time" value="$(var use_sim)"/>
+  </node>
+
+</launch>

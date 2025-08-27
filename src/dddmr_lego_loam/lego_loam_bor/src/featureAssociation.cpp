@@ -263,13 +263,17 @@ void FeatureAssociation::odomHandler(const nav_msgs::msg::Odometry::SharedPtr od
   tf2::Matrix3x3 m(tf2_trans_o2s.getRotation());
   double roll, pitch, yaw;
   m.getRPY(roll, pitch, yaw);
+  double odom_time = static_cast<double>(odomIn->header.stamp.sec) + static_cast<double>(odomIn->header.stamp.nanosec) * 1e-9;
+  double cloud_time = static_cast<double>(segInfo.header.stamp.sec) + static_cast<double>(segInfo.header.stamp.nanosec) * 1e-9;
+  if(fabs(odom_time-cloud_time)<0.05 || fabs(odom_time)<=0.1 || fabs(cloud_time)<=0.1){ //@ try to handle 0 timestamp
+    transformWheelOdometrySum[0] = pitch;
+    transformWheelOdometrySum[1] = yaw;
+    transformWheelOdometrySum[2] = roll;
+    transformWheelOdometrySum[3] = odomIn->pose.pose.position.y;
+    transformWheelOdometrySum[4] = odomIn->pose.pose.position.z;
+    transformWheelOdometrySum[5] = odomIn->pose.pose.position.x;
+  }
 
-  transformWheelOdometrySum[0] = pitch;
-  transformWheelOdometrySum[1] = yaw;
-  transformWheelOdometrySum[2] = roll;
-  transformWheelOdometrySum[3] = odomIn->pose.pose.position.y;
-  transformWheelOdometrySum[4] = odomIn->pose.pose.position.z;
-  transformWheelOdometrySum[5] = odomIn->pose.pose.position.x;
   
   //RCLCPP_WARN(this->get_logger(), "%.2f, %.2f, %.2f <> %.2f, %.2f, %.2f", roll, pitch, yaw, odomIn->pose.pose.position.x, odomIn->pose.pose.position.y, odomIn->pose.pose.position.z);
 }
