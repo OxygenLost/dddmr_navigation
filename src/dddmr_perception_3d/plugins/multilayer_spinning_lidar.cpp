@@ -544,7 +544,7 @@ void MultiLayerSpinningLidar::selfClear(){
         }
         else{
           //@ get point cloud along the ray for casting
-          bool skip_clearing = false;
+          bool skip_clear_this_segmentation = false;
           if(!observation_clear){
             //@ create a pointcloud that actually is a line composed of many descrete points, and then we can check radius along this line
             getCastingPointCloud(pt, casting_check);
@@ -564,14 +564,15 @@ void MultiLayerSpinningLidar::selfClear(){
               std::vector<int> id;
               std::vector<float> sqdist;
               if(kdtree_last_observation->radiusSearch(pt_i, search_distance, id, sqdist)>0){
-                skip_clearing = true;
+                //@ ray hits obstacle, we skip clearing this segmentation
+                skip_clear_this_segmentation = true;
                 break;
               }
             }            
           }
 
-          //Hit obstacle when ray tracing, so we skip clearing->meaning that we add this frame to observation
-          if(skip_clearing){
+          //Hit obstacle when ray tracing, so we skip clearing->meaning that we add this segmentation to the observation
+          if(skip_clear_this_segmentation){
             perception_3d::marking_voxel a_voxel;
             a_voxel.x = (*it_x).first;
             a_voxel.y = (*it_y).first;

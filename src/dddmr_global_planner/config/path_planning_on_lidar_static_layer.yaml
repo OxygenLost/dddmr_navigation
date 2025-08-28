@@ -21,7 +21,7 @@ perception_3d_global:
     global_frame: "map"
     robot_base_frame: "base_link"
     max_obstacle_distance: 9999.0
-    inscribed_radius: 0.5
+    inscribed_radius: 0.32
     inflation_descending_rate: 2.0
     inflation_radius: 1.5
     sensors_collected_frequency: 10.0
@@ -68,5 +68,5 @@ global_planner:
 #if we use get_dwa_plan in global_plan_manager, we setup parameters for dwa_global_planner
 dynamic_window_aware_global_planner:
   ros__parameters:
-    look_ahead_distance: 9.0
+    look_ahead_distance: 10.0
     recompute_frequency: 10.0
