@@ -15,6 +15,7 @@
 #include <gtsam/nonlinear/ISAM2.h>
 
 #include <std_msgs/msg/string.hpp>
+#include <std_msgs/msg/float32.hpp>
 //optimized icp gaussian newton
 #include "opt_icp_gn/optimized_ICP_GN.h"
 #include "opt_icp_gn/common.h"
@@ -78,7 +79,9 @@ private:
 
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr node_selection_sub_;
   rclcpp::Subscription<std_msgs::msg::String>::SharedPtr operation_command_sub_;
+  rclcpp::Subscription<std_msgs::msg::Float32>::SharedPtr sub_history_keyframe_search_radius_;
 
+  void historyKeyframeSearchRadiusCb(const std_msgs::msg::Float32::SharedPtr msg);
   void nodeSelectionCB(const std_msgs::msg::String::SharedPtr msg);
   void operationCommandCB(const std_msgs::msg::String::SharedPtr msg);
   

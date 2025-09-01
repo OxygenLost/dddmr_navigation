@@ -60,11 +60,19 @@ InteractivePoseGraphEditor::InteractivePoseGraphEditor(std::string name, std::sh
   operation_command_sub_ = this->create_subscription<std_msgs::msg::String>(
       "operation_command_msg", rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable(), 
       std::bind(&InteractivePoseGraphEditor::operationCommandCB, this, std::placeholders::_1));
+
+  sub_history_keyframe_search_radius_ = this->create_subscription<std_msgs::msg::Float32>(
+        "lego_loam_bag_history_keyframe_search_radius", 1,
+        std::bind(&InteractivePoseGraphEditor::historyKeyframeSearchRadiusCb, this, std::placeholders::_1));
 }
 
 InteractivePoseGraphEditor::~InteractivePoseGraphEditor()
 {
   
+}
+
+void InteractivePoseGraphEditor::historyKeyframeSearchRadiusCb(const std_msgs::msg::Float32::SharedPtr msg){
+  mo_->_history_keyframe_search_radius = msg->data;
 }
 
 void InteractivePoseGraphEditor::convert2Global(){
