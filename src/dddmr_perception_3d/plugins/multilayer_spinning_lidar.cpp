@@ -161,7 +161,7 @@ void MultiLayerSpinningLidar::onInitialize()
   pub_casting_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(pre_topic_name + "/tracing_objects", 2);
 
   pct_marking_ = std::make_shared<Marking>(&dGraph_, 
-        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   get_first_tf_ = false;
   
   marking_pub_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -830,7 +830,7 @@ void MultiLayerSpinningLidar::resetdGraph(){
   dGraph_.clear();
   dGraph_.initial(shared_data_->static_ground_size_, gbl_utils_->getMaxObstacleDistance());
   pct_marking_ = std::make_shared<Marking>(&dGraph_, 
-        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s done dynamic graph regeneration.", name_.c_str());
 }
 

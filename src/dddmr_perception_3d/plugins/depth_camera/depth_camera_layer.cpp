@@ -110,7 +110,7 @@ void DepthCameraLayer::onInitialize()
 
   //@ create cluster marking object
   pct_marking_ = std::make_shared<Marking>(&dGraph_, 
-        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   frustum_utils_ = std::make_shared<FrustumUtils>();
 
   //@ initial all publishers
@@ -672,7 +672,7 @@ void DepthCameraLayer::resetdGraph(){
   dGraph_.clear();
   dGraph_.initial(shared_data_->static_ground_size_, gbl_utils_->getMaxObstacleDistance());
   pct_marking_ = std::make_shared<Marking>(&dGraph_, 
-        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s done dynamic graph regeneration.", name_.c_str());
 }
 

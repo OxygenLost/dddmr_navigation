@@ -100,8 +100,8 @@ class Marking{
 
   public:
 
-    Marking(DynamicGraph* dg, double inscribed_radius, double inflation_radius, pcl::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_ground, double xy_resolution, double height_resolution):
-      dGraph_(dg), inscribed_radius_(inscribed_radius), inflation_radius_(inflation_radius), kdtree_ground_(kdtree_ground), xy_resolution_(xy_resolution), height_resolution_(height_resolution){};
+    Marking(DynamicGraph* dg, double inscribed_radius, double inflation_radius, const std::shared_ptr<perception_3d::SharedData>& shared_data, double xy_resolution, double height_resolution):
+      dGraph_(dg), inscribed_radius_(inscribed_radius), inflation_radius_(inflation_radius), shared_data_(shared_data), xy_resolution_(xy_resolution), height_resolution_(height_resolution){};
     
     ~Marking();
 
@@ -147,6 +147,8 @@ class Marking{
     pcl::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_ground_;
 
     rclcpp::Time last_observation_time_;
+
+    std::shared_ptr<perception_3d::SharedData> shared_data_;
 
 };
 
