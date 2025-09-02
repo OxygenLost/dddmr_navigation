@@ -1405,7 +1405,9 @@ void MapOptimization::downsampleCurrentScan() {
 }
 
 void MapOptimization::cornerOptimization(int iterCount) {
+
   updatePointAssociateToMapSinCos();
+  int cnt = 0;
   for (size_t i = 0; i < laserCloudCornerLastDS->points.size(); i++) {
     pointOri = laserCloudCornerLastDS->points[i];
     pointAssociateToMap(&pointOri, &pointSel);
@@ -1505,15 +1507,23 @@ void MapOptimization::cornerOptimization(int iterCount) {
 
         if (s > 0.1) {
           laserCloudOri->push_back(pointOri);
+          cnt++;
           coeffSel->push_back(coeff);
         }
       }
     }
   }
+  //RCLCPP_INFO(this->get_logger(), "Corner number: %d", cnt);
 }
 
 void MapOptimization::surfOptimization(int iterCount) {
   updatePointAssociateToMapSinCos();
+  int cnt_wall = 0;
+  int cnt_ground = 0;
+  pcl::PointCloud<PointType> ground_pc;
+  pcl::PointCloud<PointType> wall_pc;
+  pcl::PointCloud<PointType> ground_coeff;
+  pcl::PointCloud<PointType> wall_coeff;
   for (size_t i = 0; i < laserCloudSurfTotalLastDS->points.size(); i++) {
     pointOri = laserCloudSurfTotalLastDS->points[i];
     pointAssociateToMap(&pointOri, &pointSel);
@@ -1567,28 +1577,56 @@ void MapOptimization::surfOptimization(int iterCount) {
         //RCLCPP_INFO(this->get_logger(), "%.2f, %.2f, %.2f, %.2f", pa, pb, pc, s);
         if (s > 0.1) {
           //@ increase weight of y direction (xz plane) to reduce pitch drift
-          if(fabs(pb)>3*fabs(pa)+3*fabs(pc)){
-            float s2 = 1.0;
-            coeff.x = s2 * pa;
-            coeff.y = s2 * pb;
-            coeff.z = s2 * pc;
-            coeff.intensity = 0.0;
+          if(fabs(pb)>3*fabs(pa)+3*fabs(pc) || fabs(pointOri.y - tf2_trans_b2s_.getOrigin().z())<0.5){
+            cnt_ground++;
+            ground_pc.push_back(pointOri);
+            ground_coeff.push_back(coeff);
           }
-          if(fabs(pointOri.y + tf2_trans_b2s_.getOrigin().z())<0.2){
-            //RCLCPP_INFO(this->get_logger(), "%.2f, %.2f", pointOri.y, tf2_trans_b2s_.getOrigin().z());
-            float s2 = 1.0;
-            coeff.x = s2 * pa;
-            coeff.y = s2 * pb;
-            coeff.z = s2 * pc;
-            coeff.intensity = 0.0;
+          else{
+            cnt_wall++;
+            wall_pc.push_back(pointOri);
+            wall_coeff.push_back(coeff);
           }
-          laserCloudOri->push_back(pointOri);
-          coeffSel->push_back(coeff);
+          
+          //laserCloudOri->push_back(pointOri);
+          //coeffSel->push_back(coeff);
         }
       }
     }
   }
-  //RCLCPP_INFO(this->get_logger(), "%d, %d", surf_cnt, surf_floor_cnt);
+  if(cnt_wall>3*cnt_ground){
+    //@ surface selection is skewed, resample them
+    for(size_t i=0; i<ground_pc.points.size();i++){
+        laserCloudOri->push_back(ground_pc.points[i]);
+        coeffSel->push_back(ground_coeff.points[i]);
+    }
+    for(size_t i=0; i<wall_pc.points.size();i+=2){
+        laserCloudOri->push_back(wall_pc.points[i]);
+        coeffSel->push_back(wall_coeff.points[i]);
+    }
+  }
+  else if(cnt_ground>3*cnt_wall){
+    //@ surface selection is skewed, resample them
+    for(size_t i=0; i<ground_pc.points.size();i+=2){
+        laserCloudOri->push_back(ground_pc.points[i]);
+        coeffSel->push_back(ground_coeff.points[i]);
+    }
+    for(size_t i=0; i<wall_pc.points.size();i++){
+        laserCloudOri->push_back(wall_pc.points[i]);
+        coeffSel->push_back(wall_coeff.points[i]);
+    }
+  }
+  else{
+    for(size_t i=0; i<ground_pc.points.size();i++){
+        laserCloudOri->push_back(ground_pc.points[i]);
+        coeffSel->push_back(ground_coeff.points[i]);
+    }
+    for(size_t i=0; i<wall_pc.points.size();i++){
+        laserCloudOri->push_back(wall_pc.points[i]);
+        coeffSel->push_back(wall_coeff.points[i]);
+    }
+  }
+  //RCLCPP_INFO(this->get_logger(), "Wall number: %d, Ground number: %d", cnt_wall, cnt_ground);
 }
 
 bool MapOptimization::LMOptimization(int iterCount) {
