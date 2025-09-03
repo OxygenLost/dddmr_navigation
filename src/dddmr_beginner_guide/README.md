@@ -55,7 +55,7 @@ source install/setup.bash && ros2 launch p2p_move_base go2_localization.launch
 - Give the goal (3D Goal Pose) in RViz , then the robot will move to target point
 
 <p align='center'>
-    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_beginner_guide/give_goal_in_demo_.png" width="520" height="620"/>
+    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_beginner_guide/give_goal_in_demo_.png" width="920" height="460"/>
 </p>
 
 ### 5. Known Issues
