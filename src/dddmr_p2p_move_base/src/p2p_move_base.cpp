@@ -392,6 +392,7 @@ bool P2PMoveBase::executeCycle(const std::shared_ptr<rclcpp_action::ServerGoalHa
         RCLCPP_INFO(this->get_logger(), "Goal reach.");
         auto result = std::make_shared<dddmr_sys_core::action::PToPMoveBase::Result>();
         goal_handle->succeed(result);
+        publishZeroVelocity();
         return true;
       }
       else{

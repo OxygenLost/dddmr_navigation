@@ -1,7 +1,72 @@
 # DDDMR BEGINNER GUIDE
 
-This README covers the gudie for the beginners who want to use DDDMR Navigation Stack.
+This README is a beginner’s guide to the DDDMR Navigation Stack. With both a Gazebo quadruped robot example and a real robot guide, it’s designed to help you get up and running fast, explore, and have fun along the way.
+## ✨ DDDMR Navigation with Gazebo
+This demo demonstrates how to run the DDDMR Navigation Stack in Gazebo with a quadruped robot.
+- Build the required images to prepare the environment.
+- Run the system in two terminals — one for the Gazebo world and another for the navigation stack. 
 
+### 1. Create docker image
+Clone the repo and run ./build.bash, please select **`x64_gz`**, which already contains all the necessary components for both navigation and Gazebo.
+```
+cd ~
+git clone https://github.com/dfl-rlab/dddmr_navigation.git
+cd ~/dddmr_navigation/dddmr_docker/docker_file && ./build.bash
+```
+
+### 2. Download navigation map
+To play gazebo with dddmr_navigation, you will need to download demo navigation map (12.3MB).
+```
+cd ~ && mkdir dddmr_bags
+cd ~/dddmr_navigation/src/dddmr_beginner_guide && ./download_files.bash
+```
+
+### 3. Prepare demo enviroment
+#### Create a two docker container (gazebo and navigaiton)
+> [!IMPORTANT] 
+> The following command will start two interactive Docker containers using the image we built.  Please open **two separate terminals** to prepare the demo environment
+
+#### 🖥️ Terminal 1  (create the container for gazebo system)
+
+- ##### Step 1 (on host): create the container for Gazebo system
+```
+cd ~/dddmr_navigation/src/dddmr_beginner_guide && ./run_x64_gazebo.bash
+```
+- ##### Step 2 (inside the gazebo container): build and launch
+```
+source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+source install/setup.bash && ros2 launch go2_config gz_lidar_odom.launch.py
+```
+
+#### 🖥️ Terminal 2   (create the container for navigation system)
+
+   - ##### Step 1 (on host): create the container for navigation system
+```
+cd ~/dddmr_navigation/src/dddmr_beginner_guide && ./run_x64_navigation.bash
+```
+   - ##### Step 2 (inside the navigation container): build and launch
+```
+cd dddmr_navigation/ && source /opt/ros/humble/setup.bash && colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+source install/setup.bash && ros2 launch p2p_move_base go2_localization.launch
+```
+
+### 4. Run demo 
+- In the Gazebo demo, the map is already aligned, so you don’t need to set the initial pose unless you are mapping yourself
+- Give the goal (3D Goal Pose) in RViz , then the robot will move to target point
+
+<p align='center'>
+    <img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_beginner_guide/give_goal_in_demo_.png" width="520" height="620"/>
+</p>
+
+### 5. Known Issues
+> [!WARNING]
+> The following are currently observed behaviors. They are under investigation and will be fixed in future updates.
+ - Gazebo: Occasional slipping on slopes 
+ - Mapping: Duplicate floor layers  
+
+
+
+<details><summary><h2>💡 DDDMR Navigation with a Real Robot (Coming soon..)</h2></summary>
 ## ✨ Start DDDMR Navigation with a Real Robot
 You should be able to run DDDMR Navigation like a charm if your system meet following requirements:
 
