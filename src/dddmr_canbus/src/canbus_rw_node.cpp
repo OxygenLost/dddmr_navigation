@@ -54,8 +54,9 @@ void CANBusReader::parseCANFrame(can_frame *rx_frame) {
   
   //@ candump id is hex, here the rx_frame_id is decimal. 
   //@ can0  262   [8]  01 24 00 1E 1E 00 00 00 ---> rx_frame->can_id = 610  (262-->610)
-  
-  if(rx_frame->can_id == 610){
+  //RCLCPP_INFO(this->get_logger(), "frame_id: %d, %u", rx_frame->can_id, std::make_unsigned_t<int>(rx_frame->can_id));
+    
+  if(std::make_unsigned_t<int>(rx_frame->can_id) == 651){
     RCLCPP_INFO(this->get_logger(), "%d", static_cast<int>(rx_frame->data[0]));
     RCLCPP_INFO(this->get_logger(), "%d", static_cast<int>(rx_frame->data[1]));
     RCLCPP_INFO(this->get_logger(), "%d", static_cast<int>(rx_frame->data[2]));
@@ -67,10 +68,26 @@ void CANBusReader::parseCANFrame(can_frame *rx_frame) {
     RCLCPP_INFO(this->get_logger(), "----------------");
   }
 
+  //@ first digit is wrong when frane_id is 32 digit.
+  //@ https://github.com/brutella/can/issues/16
+  //@ candump frame_id: 0CFDE900(217966848) -->received is 8CFDE900(2365450496)
+  if(std::make_unsigned_t<int>(rx_frame->can_id) == 217962548){
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[0]));
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[1]));
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[2]));
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[3]));
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[4]));
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[5]));
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[6]));
+    RCLCPP_INFO(this->get_logger(), "s %d", static_cast<int>(rx_frame->data[7]));
+    RCLCPP_INFO(this->get_logger(), "----------------");
+  }
+  
+
 }
 
 void CANBusReader::timerLoop(){
-  
+  return; 
   can_frame frame;
 
   frame.can_id = 304;
