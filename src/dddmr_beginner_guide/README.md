@@ -1,6 +1,9 @@
 # DDDMR BEGINNER GUIDE
 
 This README is a beginner’s guide to the DDDMR Navigation Stack. With both a Gazebo quadruped robot example and a real robot guide, it’s designed to help you get up and running fast, explore, and have fun along the way.
+## 🖥️ Software Requirements
+- **Ubuntu 22.04** (tested in 22.04, should support 24.04)
+- **Docker**  [install Docker](https://docs.docker.com/engine/install/)
 ## ✨ DDDMR Navigation with Gazebo
 This demo demonstrates how to run the DDDMR Navigation Stack in Gazebo with a quadruped robot.
 - Build the required images to prepare the environment.
