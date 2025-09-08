@@ -72,13 +72,20 @@ void Marking::computeMinDistanceFromObstacle2GroundNodes(
     std::vector<int> id_tmp;
     std::vector<float> sqdist_tmp;
     //@ We mark lethal
-    if(kdtree_ground_->radiusSearch(pt, inflation_radius_, id_tmp, sqdist_tmp)){
+    if(shared_data_->kdtree_ground_->radiusSearch(pt, inflation_radius_, id_tmp, sqdist_tmp)){
       for(int i=0;i<id_tmp.size();i++){
-
-        if(nodes_of_min_distance.insert(std::make_pair(id_tmp[i], sqrt(sqdist_tmp[i]))).second == false)
+        float dx = pt.x - shared_data_->pcl_ground_->points[id_tmp[i]].x;
+        float dy = pt.y - shared_data_->pcl_ground_->points[id_tmp[i]].y;
+        float dz = pt.z - shared_data_->pcl_ground_->points[id_tmp[i]].z;
+        //@ Remove z value (see issue 8), we might have to review this assumption.
+        float distance = sqrt(dx*dx + dy* dy);
+        //RCLCPP_DEBUG(rclcpp::get_logger("cluster_marking"),"Distance xyz: %.2f, distance xy: %.2f", sqrt(sqdist_tmp[i]), distance);
+        //if(nodes_of_min_distance.insert(std::make_pair(id_tmp[i], sqrt(sqdist_tmp[i]))).second == false)
+        if(nodes_of_min_distance.insert(std::make_pair(id_tmp[i], distance)).second == false)
         {
           //@ key was presented
-          nodes_of_min_distance[id_tmp[i]] = std::min(nodes_of_min_distance[id_tmp[i]], sqrt(sqdist_tmp[i]));
+          //nodes_of_min_distance[id_tmp[i]] = std::min(nodes_of_min_distance[id_tmp[i]], sqrt(sqdist_tmp[i]));
+          nodes_of_min_distance[id_tmp[i]] = std::min(nodes_of_min_distance[id_tmp[i]], distance);
         }
 
       }
@@ -107,7 +114,10 @@ void Marking::addPCPtr(const double cx, const double cy, const double cz,
   marking_[x][y][z].nodes_of_min_distance_ = nodes_of_min_distance;
   
   for(auto id=nodes_of_min_distance.begin();id!=nodes_of_min_distance.end();id++){
-    dGraph_->setValue((*id).first,(*id).second);
+    //RCLCPP_INFO(rclcpp::get_logger("ClusterMarking"), "%.2f", (*id).second);
+    dGraph_->setValue((*id).first, (*id).second);
+    if((*id).second<=inscribed_radius_)
+      lethal_map_[(*id).first] = (*id).second;
   }
   
 }
@@ -118,6 +128,8 @@ void Marking::removePCPtr(perception_3d::per_marking& per_marking){
 
   for(auto id=nodes_of_min_distance.begin();id!=nodes_of_min_distance.end();id++){
     dGraph_->clearValue((*id).first, 9999.0);
+    if((*id).second<=inscribed_radius_)
+      lethal_map_.erase((*id).first);
   }
 
   per_marking.pc_.reset();

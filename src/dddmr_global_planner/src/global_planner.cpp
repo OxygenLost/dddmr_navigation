@@ -93,6 +93,10 @@ void GlobalPlanner::initial(const std::shared_ptr<perception_3d::Perception3D_RO
   this->get_parameter("enable_detail_log", enable_detail_log_);
   RCLCPP_INFO(this->get_logger(), "enable_detail_log: %d", enable_detail_log_);    
 
+  declare_parameter("a_star_expanding_radius", rclcpp::ParameterValue(0.5));
+  this->get_parameter("a_star_expanding_radius", a_star_expanding_radius_);
+  RCLCPP_INFO(this->get_logger(), "a_star_expanding_radius: %.2f", a_star_expanding_radius_);    
+
   tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   action_server_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   //@Initialize transform listener and broadcaster
@@ -447,6 +451,13 @@ void GlobalPlanner::makePlan(const std::shared_ptr<rclcpp_action::ServerGoalHand
   //@get goal and start
   const auto goal = goal_handle->get_goal();
 
+  if(!perception_3d_ros_->getSharedDataPtr()->is_static_layer_ready_){
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Waiting for static layer");
+    auto result = std::make_shared<dddmr_sys_core::action::GetPlan::Result>();
+    goal_handle->abort(result);
+    return;
+  }
+
   geometry_msgs::msg::PoseStamped start;
   perception_3d_ros_->getGlobalPose(start);
 
@@ -511,7 +522,10 @@ void GlobalPlanner::getStaticGraphFromPerception3D(){
 
   if(!has_initialized_){
     has_initialized_ = true;
-    a_star_planner_ = std::make_shared<A_Star_on_Graph>(pcl_ground_, perception_3d_ros_);
+    if(a_star_expanding_radius_ >= perception_3d_ros_->getGlobalUtils()->getInscribedRadius()*2){
+      RCLCPP_WARN(this->get_logger(), "Expanding radius is much larger than InscribedRadius, the planning time will be increased.");
+    }
+    a_star_planner_ = std::make_shared<A_Star_on_Graph>(pcl_ground_, perception_3d_ros_, a_star_expanding_radius_);
     a_star_planner_->setupTurningWeight(turning_weight_);
   }
   else{
@@ -520,7 +534,7 @@ void GlobalPlanner::getStaticGraphFromPerception3D(){
 
   pubWeight();
 
-  RCLCPP_INFO(this->get_logger(), "Publish weighted pc.");
+  RCLCPP_INFO(this->get_logger(), "Publish weighted ground point cloud.");
   graph_ready_ = true;
 }
 

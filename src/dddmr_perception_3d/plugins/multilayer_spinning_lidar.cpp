@@ -56,6 +56,7 @@ void MultiLayerSpinningLidar::ptrInitial(){
   pcl_msg_.reset(new pcl::PointCloud<pcl::PointXYZ>);
   pcl_msg_gbl_.reset(new pcl::PointCloud<pcl::PointXYZ>);
   pc_current_window_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
 void MultiLayerSpinningLidar::onInitialize()
@@ -155,10 +156,12 @@ void MultiLayerSpinningLidar::onInitialize()
   pub_current_segmentation_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/current_segmentation", 2);
   pub_gbl_marking_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/global_marking", 2);
   pub_dGraph_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/dGraph", 2);
+  pub_lethal_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(pre_topic_name + "/lethal", 2);
 
   pub_casting_ = node_->create_publisher<visualization_msgs::msg::MarkerArray>(pre_topic_name + "/tracing_objects", 2);
 
-  pct_marking_ = std::make_shared<Marking>(&dGraph_, gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+  pct_marking_ = std::make_shared<Marking>(&dGraph_, 
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   get_first_tf_ = false;
   
   marking_pub_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
@@ -271,6 +274,29 @@ void MultiLayerSpinningLidar::cbSensor(const sensor_msgs::msg::PointCloud2::Shar
     pub_current_observation_->publish(ros_pc2_msg);
   }
 
+}
+
+void MultiLayerSpinningLidar::updateLethalPointCloud(){
+
+  std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
+  
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+  for(auto it=pct_marking_->lethal_map_.begin(); it!=pct_marking_->lethal_map_.end(); it++){
+    pcl::PointXYZI ipt;
+    ipt.x = shared_data_->pcl_ground_->points[(*it).first].x;
+    ipt.y = shared_data_->pcl_ground_->points[(*it).first].y;
+    ipt.z = shared_data_->pcl_ground_->points[(*it).first].z;
+    current_lethal_->push_back(ipt);
+    //RCLCPP_INFO(node_->get_logger(), "Lethal: %.2f, %.2f, %2.f", ipt.x, ipt.y, ipt.z);
+  }
+
+  if(pub_lethal_->get_subscription_count()>0){
+    sensor_msgs::msg::PointCloud2 ros_pc2_msg;
+    current_lethal_->header.frame_id = gbl_utils_->getGblFrame();
+    pcl::toROSMsg(*current_lethal_, ros_pc2_msg);
+    pub_lethal_->publish(ros_pc2_msg);
+  }
+  
 }
 
 void MultiLayerSpinningLidar::selfMark(){
@@ -518,7 +544,7 @@ void MultiLayerSpinningLidar::selfClear(){
         }
         else{
           //@ get point cloud along the ray for casting
-          bool skip_clearing = false;
+          bool skip_clear_this_segmentation = false;
           if(!observation_clear){
             //@ create a pointcloud that actually is a line composed of many descrete points, and then we can check radius along this line
             getCastingPointCloud(pt, casting_check);
@@ -538,14 +564,15 @@ void MultiLayerSpinningLidar::selfClear(){
               std::vector<int> id;
               std::vector<float> sqdist;
               if(kdtree_last_observation->radiusSearch(pt_i, search_distance, id, sqdist)>0){
-                skip_clearing = true;
+                //@ ray hits obstacle, we skip clearing this segmentation
+                skip_clear_this_segmentation = true;
                 break;
               }
             }            
           }
 
-          //Hit obstacle when ray tracing, so we skip clearing->meaning that we add this frame to observation
-          if(skip_clearing){
+          //Hit obstacle when ray tracing, so we skip clearing->meaning that we add this segmentation to the observation
+          if(skip_clear_this_segmentation){
             perception_3d::marking_voxel a_voxel;
             a_voxel.x = (*it_x).first;
             a_voxel.y = (*it_y).first;
@@ -598,10 +625,28 @@ void MultiLayerSpinningLidar::selfClear(){
 
 void MultiLayerSpinningLidar::getCastingPointCloud(pcl::PointXYZ& cluster_center, pcl::PointCloud<pcl::PointXYZI>& pc_for_check){
 
-  
   //@We leverage intensity as distance from cluster_center to check point
+  float dX =
+      cluster_center.x - trans_gbl2s_af3_.translation().x();
+  float dY =
+      cluster_center.y - trans_gbl2s_af3_.translation().y();
+  float dZ =
+      cluster_center.z - trans_gbl2s_af3_.translation().z();
   
+  float distance = sqrt(dX*dX + dY*dY + dZ*dZ);
+  distance = distance/0.05; //sample by every 5 cm
+  float dt = 1/distance;
+  for(float t=0; t<=1.0; t+=dt){
+    pcl::PointXYZI a_pt;
+    a_pt.intensity = 0.0;
+    a_pt.x = trans_gbl2s_af3_.translation().x() + dX*t;
+    a_pt.y = trans_gbl2s_af3_.translation().y() + dY*t;
+    a_pt.z = trans_gbl2s_af3_.translation().z() + dZ*t;
+    a_pt.intensity = getDistanceBTWPoints(cluster_center, a_pt);  
+    pc_for_check.push_back(a_pt); 
+  }
   
+  /*
   double l = cluster_center.x - trans_gbl2s_af3_.translation().x();
   double m = cluster_center.y - trans_gbl2s_af3_.translation().y();
   double n = cluster_center.z - trans_gbl2s_af3_.translation().z();
@@ -627,7 +672,7 @@ void MultiLayerSpinningLidar::getCastingPointCloud(pcl::PointXYZ& cluster_center
       pc_for_check.push_back(pt); 
     }    
   }
-
+  */
 }
 
 bool MultiLayerSpinningLidar::isinLidarObservation(pcl::PointXYZ& pc){
@@ -784,7 +829,8 @@ void MultiLayerSpinningLidar::resetdGraph(){
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s starts to reset dynamic graph.", name_.c_str());
   dGraph_.clear();
   dGraph_.initial(shared_data_->static_ground_size_, gbl_utils_->getMaxObstacleDistance());
-  pct_marking_ = std::make_shared<Marking>(&dGraph_, gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+  pct_marking_ = std::make_shared<Marking>(&dGraph_, 
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s done dynamic graph regeneration.", name_.c_str());
 }
 
@@ -805,9 +851,11 @@ bool MultiLayerSpinningLidar::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr MultiLayerSpinningLidar::getObservation(){
-
   return sensor_current_observation_;
+}
 
+pcl::PointCloud<pcl::PointXYZI>::Ptr MultiLayerSpinningLidar::getLethal(){
+  return current_lethal_;
 }
 
 }//end of name space

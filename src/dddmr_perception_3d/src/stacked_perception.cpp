@@ -82,10 +82,9 @@ void StackedPerception::doClear_then_Mark(){
   for (std::vector<std::shared_ptr<Sensor> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
        ++plugin)
   {
-
     (*plugin)->selfClear();
     (*plugin)->selfMark();
-
+    (*plugin)->updateLethalPointCloud();
   }
 
 }
@@ -136,6 +135,21 @@ void StackedPerception::aggregateObservations(){
     //@aggregate observation for perception
     (*shared_data_->aggregate_observation_) += (*(*plugin)->getObservation());
     shared_data_->aggregate_observation_->header.frame_id = (*plugin)->getGlobalUtils()->getGblFrame();
+  }
+
+}
+
+void StackedPerception::aggregateLethal(){
+  
+  //@ before calling this function, make sure we mutex lock, i.e.
+  shared_data_->aggregate_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+
+  for (std::vector<std::shared_ptr<Sensor> >::iterator plugin = plugins_.begin(); plugin != plugins_.end();
+       ++plugin)
+  {
+    //@aggregate observation for perception
+    (*shared_data_->aggregate_lethal_) += (*(*plugin)->getLethal());
+    shared_data_->aggregate_lethal_->header.frame_id = (*plugin)->getGlobalUtils()->getGblFrame();
   }
 
 }

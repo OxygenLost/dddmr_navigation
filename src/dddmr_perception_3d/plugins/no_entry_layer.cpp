@@ -45,6 +45,8 @@ NoEntryLayer::~NoEntryLayer(){
 
 void NoEntryLayer::onInitialize()
 { 
+  
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 
   rclcpp::QoS map_qos(10);  // initialize to default
   map_qos.transient_local();
@@ -214,6 +216,12 @@ void NoEntryLayer::getBoundingBox(perception_3d::NoEntryZone& a_zone){
 
 }
 
+void NoEntryLayer::updateLethalPointCloud(){
+
+  //@ current_lethal_ is updated in marking
+
+}
+
 void NoEntryLayer::selfMark(){
   
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
@@ -268,6 +276,7 @@ void NoEntryLayer::selfMark(){
         if(shared_data_->kdtree_ground_->radiusSearch(ipt, inflation_distance_, pointIdxRadiusSearch, pointRadiusSquaredDistance)>0){
           for(int i=0;i<pointIdxRadiusSearch.size();i++){
             dGraph_.setValue(pointIdxRadiusSearch[i], sqrt(pointRadiusSquaredDistance[i]));
+            current_lethal_->push_back(ipt);
           }
         }
       }
@@ -302,9 +311,9 @@ bool NoEntryLayer::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr NoEntryLayer::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr NoEntryLayer::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

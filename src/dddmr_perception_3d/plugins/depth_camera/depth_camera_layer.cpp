@@ -61,7 +61,8 @@ void DepthCameraLayer::onInitialize()
   marking_height_ = -1.0;
   pcl_msg_gbl_.reset(new pcl::PointCloud<pcl::PointXYZI>);
   pc_current_window_.reset(new pcl::PointCloud<pcl::PointXYZI>);
-
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+  
   node_->declare_parameter(name_ + ".is_local_planner", rclcpp::ParameterValue(false));
   node_->get_parameter(name_ + ".is_local_planner", is_local_planner_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "is_local_planner: %d", is_local_planner_);
@@ -108,7 +109,8 @@ void DepthCameraLayer::onInitialize()
   RCLCPP_INFO(node_->get_logger().get_child(name_), "pub_gbl_marking_frequency: %.2f", pub_gbl_marking_frequency_);
 
   //@ create cluster marking object
-  pct_marking_ = std::make_shared<Marking>(&dGraph_, gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+  pct_marking_ = std::make_shared<Marking>(&dGraph_, 
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   frustum_utils_ = std::make_shared<FrustumUtils>();
 
   //@ initial all publishers
@@ -437,6 +439,22 @@ void DepthCameraLayer::selfClear(){
   }
 }
 
+void DepthCameraLayer::updateLethalPointCloud(){
+
+  std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
+  
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
+  for(auto it=pct_marking_->lethal_map_.begin(); it!=pct_marking_->lethal_map_.end(); it++){
+    pcl::PointXYZI ipt;
+    ipt.x = shared_data_->pcl_ground_->points[(*it).first].x;
+    ipt.y = shared_data_->pcl_ground_->points[(*it).first].y;
+    ipt.z = shared_data_->pcl_ground_->points[(*it).first].z;
+    current_lethal_->push_back(ipt);
+    //RCLCPP_INFO(node_->get_logger(), "Lethal: %.2f, %.2f, %2.f", ipt.x, ipt.y, ipt.z);
+  }
+
+}
+
 void DepthCameraLayer::selfMark(){
   
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
@@ -644,12 +662,17 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr DepthCameraLayer::getObservation(){
   return sensor_current_observation_;
 }
 
+pcl::PointCloud<pcl::PointXYZI>::Ptr DepthCameraLayer::getLethal(){
+  return current_lethal_;
+}
+
 void DepthCameraLayer::resetdGraph(){
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s starts to reset dynamic graph.", name_.c_str());
   dGraph_.clear();
   dGraph_.initial(shared_data_->static_ground_size_, gbl_utils_->getMaxObstacleDistance());
-  pct_marking_ = std::make_shared<Marking>(&dGraph_, gbl_utils_->getInflationRadius(), shared_data_->kdtree_ground_, resolution_, height_resolution_);
+  pct_marking_ = std::make_shared<Marking>(&dGraph_, 
+        gbl_utils_->getInscribedRadius(), gbl_utils_->getInflationRadius(), shared_data_, resolution_, height_resolution_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "%s done dynamic graph regeneration.", name_.c_str());
 }
 

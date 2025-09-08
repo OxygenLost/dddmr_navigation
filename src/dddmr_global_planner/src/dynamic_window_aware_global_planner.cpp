@@ -133,6 +133,14 @@ void DWA_GlobalPlanner::makePlan(const std::shared_ptr<rclcpp_action::ServerGoal
   
   new_goal_ = goal_handle->get_goal()->goal;
 
+  if(!perception_3d_ros_->getSharedDataPtr()->is_static_layer_ready_){
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Waiting for static layer");
+    threading_timer_->cancel();
+    auto result = std::make_shared<dddmr_sys_core::action::GetPlan::Result>();
+    goal_handle->abort(result);
+    return;
+  }
+
   if(!goal_handle->get_goal()->activate_threading){
     threading_timer_->cancel();
     auto result = std::make_shared<dddmr_sys_core::action::GetPlan::Result>();

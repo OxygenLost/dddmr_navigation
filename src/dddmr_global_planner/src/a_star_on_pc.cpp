@@ -102,11 +102,12 @@ bool AstarList::isFrontierEmpty(){
 //@----------------------------------------------------------------------------------------
 
 A_Star_on_Graph::A_Star_on_Graph(pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up, 
-                                  std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros){
+                                  std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros,
+                                  double a_star_expanding_radius){
   
   perception_ros_ = perception_ros;
-
   pc_original_z_up_ = pc_original_z_up;
+  a_star_expanding_radius_ = a_star_expanding_radius;
   ASLS_ = new AstarList(pc_original_z_up_);
 }
 
@@ -164,6 +165,38 @@ double A_Star_on_Graph::getThetaFromParent2Expanding(pcl::PointXYZI m_pcl_curren
   return theta_of_vector;
 }
 
+bool A_Star_on_Graph::isLineOfSightClear(pcl::PointXYZI& pcl_current, pcl::PointXYZI& pcl_expanding, double inscribed_radius){
+
+  //@ generate line equation
+  float dX =
+      pcl_expanding.x - pcl_current.x;
+  float dY =
+      pcl_expanding.y - pcl_current.y;
+  float dZ =
+      pcl_expanding.z - pcl_current.z;
+  
+  float distance = sqrt(dX*dX + dY*dY + dZ*dZ);
+  distance = distance/inscribed_radius; //sample by every inscribed radius
+  float dt = 1/distance;
+  for(float t=0; t<=1.0+dt; t+=dt){
+    float r = t;
+    if(t>=1.0) //@ make sure we examine t=1.0
+      r = 1.0;
+    pcl::PointXYZI a_pt;
+    a_pt.intensity = 0.0;
+    a_pt.x = pcl_current.x + dX*r;
+    a_pt.y = pcl_current.y + dY*r;
+    a_pt.z = pcl_current.z + dZ*r;
+    std::vector<int> pidx;
+    std::vector<float> prsd;
+    kdtree_lethal_->radiusSearch(a_pt, 2*inscribed_radius, pidx, prsd);
+    if(pidx.size()>1){
+      return false;
+    }
+  }
+  return true;
+}
+
 void A_Star_on_Graph::getPath(
   unsigned int start, unsigned int goal,
   std::vector<unsigned int>& path){
@@ -185,6 +218,17 @@ void A_Star_on_Graph::getPath(
   double inscribed_radius = perception_ros_->getGlobalUtils()->getInscribedRadius();
   double inflation_descending_rate = perception_ros_->getGlobalUtils()->getInflationDescendingRate();
   double max_obstacle_distance = perception_ros_->getGlobalUtils()->getMaxObstacleDistance();
+  
+  bool is_lethal = false;
+  perception_ros_->getStackedPerception()->aggregateLethal();
+  //@ generate kd-tree and handle no point cloud edge case
+  kdtree_lethal_.reset(new nanoflann::KdTreeFLANN<pcl::PointXYZI>());
+  
+  if(perception_ros_->getSharedDataPtr()->aggregate_lethal_->points.size()>0){
+    kdtree_lethal_->setInputCloud(perception_ros_->getSharedDataPtr()->aggregate_lethal_);
+    is_lethal = true;
+  }
+    
 
   while(!ASLS_->isFrontierEmpty()){ 
     /*Pop minimum F, we leverage prior queue, so we dont need to loop frontier everytime*/
@@ -195,7 +239,7 @@ void A_Star_on_Graph::getPath(
     pcl::PointXYZI pcl_now = pc_original_z_up_->points[current_node.self_index];
     std::vector<int> pointIdxRadiusSearch;
     std::vector<float> pointRadiusSquaredDistance;
-    ASLS_->kdtree_ground_->radiusSearch(pcl_now, 1.0, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+    ASLS_->kdtree_ground_->radiusSearch(pcl_now, a_star_expanding_radius_, pointIdxRadiusSearch, pointRadiusSquaredDistance);
 
     //@dealing with orphan node
     if(pointIdxRadiusSearch.size()<8){
@@ -222,13 +266,20 @@ void A_Star_on_Graph::getPath(
         //RCLCPP_DEBUG(rclcpp::get_logger("astar"), "%.2f,%.2f,%.2f, v: %.2f",pc_original_z_up_->points[(*it).first].x,pc_original_z_up_->points[(*it).first].y,pc_original_z_up_->points[(*it).first].z, dGraphValue);
         continue;
       }
+
+      pcl::PointXYZI pcl_current = pc_original_z_up_->points[current_node.self_index];
+      pcl::PointXYZI pcl_current_parent = pc_original_z_up_->points[current_node.parent_index];
+      pcl::PointXYZI pcl_expanding = pc_original_z_up_->points[current_expanding_index];
+
+      //@ check line-of-sight when distance is 2 times larger than inscribed_radius
+      if(current_expanding_g>=2*inscribed_radius){
+        if(!isLineOfSightClear(pcl_current, pcl_expanding, inscribed_radius))
+          continue;
+      }
       
       double factor = exp(-1.0 * inflation_descending_rate * (dGraphValue - inscribed_radius));
 
       //@ get current_parent, current, expanding to compute theta od expanding
-      pcl::PointXYZI pcl_current = pc_original_z_up_->points[current_node.self_index];
-      pcl::PointXYZI pcl_current_parent = pc_original_z_up_->points[current_node.parent_index];
-      pcl::PointXYZI pcl_expanding = pc_original_z_up_->points[current_expanding_index];
       double theta = getThetaFromParent2Expanding(pcl_current_parent, pcl_current, pcl_expanding);
       
       //if(getPitchFromParent2Expanding(pcl_current_parent, pcl_current, pcl_expanding)>0.2)

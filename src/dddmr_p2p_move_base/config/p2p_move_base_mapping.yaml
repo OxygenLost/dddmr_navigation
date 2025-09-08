@@ -224,3 +224,4 @@ global_planner:
   ros__parameters:
     turning_weight: 0.1 #Punish the zig-zag path
     enable_detail_log: false
+    a_star_expanding_radius: 0.5

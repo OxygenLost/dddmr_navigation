@@ -36,7 +36,7 @@ namespace perception_3d
 {
 
 SpeedLimitLayer::SpeedLimitLayer(){
-
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
 SpeedLimitLayer::~SpeedLimitLayer(){
@@ -215,6 +215,10 @@ void SpeedLimitLayer::getBoundingBox(perception_3d::SpeedZone& a_zone){
 
 }
 
+void SpeedLimitLayer::updateLethalPointCloud(){
+  
+}
+
 void SpeedLimitLayer::selfMark(){
   
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
@@ -309,9 +313,9 @@ bool SpeedLimitLayer::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr SpeedLimitLayer::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr SpeedLimitLayer::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

@@ -36,7 +36,7 @@ namespace perception_3d
 {
 
 StaticLayer::StaticLayer(){
-
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
 }
 
 StaticLayer::~StaticLayer(){
@@ -167,6 +167,8 @@ void StaticLayer::cbGround(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
  
 }
 
+void StaticLayer::updateLethalPointCloud(){
+}
 
 void StaticLayer::selfMark(){
   std::unique_lock<std::recursive_mutex> lock(shared_data_->ground_kdtree_cb_mutex_);
@@ -373,9 +375,9 @@ bool StaticLayer::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr StaticLayer::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr StaticLayer::getLethal(){
+  return current_lethal_;
+}
 }//end of name space

@@ -36,6 +36,7 @@ namespace perception_3d
 {
 
 PathBlockedStrategy::PathBlockedStrategy(){
+  current_lethal_.reset(new pcl::PointCloud<pcl::PointXYZI>);
   return;
 }
 
@@ -47,6 +48,9 @@ void PathBlockedStrategy::onInitialize()
   RCLCPP_INFO(node_->get_logger().get_child(name_), "check_radius: %.2f", check_radius_);//5.0
   prune_plan_blocked_ratio_ = 0.0;
 
+}
+
+void PathBlockedStrategy::updateLethalPointCloud(){
 }
 
 void PathBlockedStrategy::selfMark(){
@@ -113,9 +117,9 @@ bool PathBlockedStrategy::isCurrent(){
 }
 
 pcl::PointCloud<pcl::PointXYZI>::Ptr PathBlockedStrategy::getObservation(){
-
   return sensor_current_observation_;
-
 }
-
+pcl::PointCloud<pcl::PointXYZI>::Ptr PathBlockedStrategy::getLethal(){
+  return current_lethal_;
+}
 }//end of name space
