@@ -99,6 +99,7 @@ add_library(critics SHARED
   models/shortest_angle_model.cpp
   models/stick_path_model.cpp
   models/toward_global_plan_model.cpp
+  models/twirling_model.cpp
 )
 target_link_libraries(critics
   mpc_critics_ros

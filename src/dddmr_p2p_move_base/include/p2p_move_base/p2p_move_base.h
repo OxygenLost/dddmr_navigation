@@ -85,6 +85,7 @@ class P2PMoveBase : public rclcpp::Node {
 
     rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_pub_;
     rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr stamped_cmd_vel_pub_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr mb_state_pub_;
 
     bool isQuaternionValid(const geometry_msgs::msg::Quaternion& q);
 

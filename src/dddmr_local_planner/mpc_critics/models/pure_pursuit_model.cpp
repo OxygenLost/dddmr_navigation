@@ -108,6 +108,7 @@ double PurePursuitModel::scoreTrajectory(base_trajectory::Trajectory &traj){
   RCLCPP_DEBUG(node_->get_logger().get_child(name_), "trans: %f,%f,%f", pose_difference.translation().x(), pose_difference.translation().y(), pose_difference.translation().z());
   RCLCPP_STREAM(node_->get_logger().get_child(name_), "Affine: " << pose_difference.rotation());
   */
+  //RCLCPP_INFO(node_->get_logger().get_child(name_), "trans: %f,%f,%f", tf_pose_difference.transform.translation.x, tf_pose_difference.transform.translation.y, tf_pose_difference.transform.translation.z);
   //@ normalized translation vs rotation
   return (translation_weight_*distance + orientation_weight_*y);
 }

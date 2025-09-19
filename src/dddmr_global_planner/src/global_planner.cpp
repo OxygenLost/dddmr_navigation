@@ -321,22 +321,34 @@ void GlobalPlanner::getROSPath(std::vector<unsigned int>& path_id, nav_msgs::msg
     vx = next_pst.pose.position.x - pst.pose.position.x;
     vy = next_pst.pose.position.y - pst.pose.position.y;
     vz = next_pst.pose.position.z - pst.pose.position.z;
-    double unit = sqrt(vx*vx + vy*vy + vz*vz);
-    
-    tf2::Vector3 axis_vector(vx/unit, vy/unit, vz/unit);
 
-    tf2::Vector3 up_vector(1.0, 0.0, 0.0);
-    tf2::Vector3 right_vector = axis_vector.cross(up_vector);
-    right_vector.normalized();
-    tf2::Quaternion q(right_vector, -1.0*acos(axis_vector.dot(up_vector)));
-    q.normalize();
+    if(vz!=0){
+      double unit = sqrt(vx*vx + vy*vy + vz*vz);
+      
+      tf2::Vector3 axis_vector(vx/unit, vy/unit, vz/unit);
 
+      tf2::Vector3 up_vector(1.0, 0.0, 0.0);
+      tf2::Vector3 right_vector = axis_vector.cross(up_vector);
+      right_vector.normalized();
+      tf2::Quaternion q(right_vector, -1.0*acos(axis_vector.dot(up_vector)));
+      q.normalize();
+      pst.pose.orientation.x = q.getX();
+      pst.pose.orientation.y = q.getY();
+      pst.pose.orientation.z = q.getZ();
+      pst.pose.orientation.w = q.getW();
+    }
+    else{
+      //@ handle with 2D
+      double yaw = atan2(vy, vx);
+      tf2::Quaternion q;
+      q.setRPY(0.0, 0.0, yaw);
+      pst.pose.orientation.x = q.getX();
+      pst.pose.orientation.y = q.getY();
+      pst.pose.orientation.z = q.getZ();
+      pst.pose.orientation.w = q.getW();
+    }
 
-    pst.pose.orientation.x = q.getX();
-    pst.pose.orientation.y = q.getY();
-    pst.pose.orientation.z = q.getZ();
-    pst.pose.orientation.w = q.getW();     
-
+    //RCLCPP_INFO(this->get_logger(), "%.2f, %.2f, %.2f,%.2f, %.2f, %.2f, %.2f", vx, vy, vz, q.getX(), q.getY(), q.getZ(), q.getW());
     //@Interpolation to make global plan smoother and better resolution for local planner
     geometry_msgs::msg::PoseStamped pst_inter_polate = pst;
     if(it<path_id.size()-1){
@@ -455,6 +467,13 @@ void GlobalPlanner::makePlan(const std::shared_ptr<rclcpp_action::ServerGoalHand
     RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Waiting for static layer");
     auto result = std::make_shared<dddmr_sys_core::action::GetPlan::Result>();
     goal_handle->abort(result);
+    return;
+  }
+
+  if(!goal_handle->get_goal()->activate_threading){
+    auto result = std::make_shared<dddmr_sys_core::action::GetPlan::Result>();
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Deactivate thread");
+    goal_handle->succeed(result);
     return;
   }
 

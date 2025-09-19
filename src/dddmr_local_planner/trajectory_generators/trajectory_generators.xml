@@ -9,6 +9,10 @@
       <description>TBW</description>
     </class>
 
+    <class type="trajectory_generators::OmniSimpleTrajectoryGeneratorTheory"  base_class_type="trajectory_generators::TrajectoryGeneratorTheory">
+      <description>TBW</description>
+    </class>
+
   </library>
 </class_libraries>
 

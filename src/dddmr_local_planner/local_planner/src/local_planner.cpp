@@ -231,16 +231,27 @@ bool Local_Planner::isInitialHeadingAligned(){
   vx = last_pose.pose.position.x - first_pose.pose.position.x;
   vy = last_pose.pose.position.y - first_pose.pose.position.y;
   vz = last_pose.pose.position.z - first_pose.pose.position.z;
-  double unit = sqrt(vx*vx + vy*vy + vz*vz);
-  
-  tf2::Vector3 axis_vector(vx/unit, vy/unit, vz/unit);
+  tf2::Quaternion q;
+  if(vz!=0){
+    double unit = sqrt(vx*vx + vy*vy + vz*vz);
+    
+    tf2::Vector3 axis_vector(vx/unit, vy/unit, vz/unit);
 
-  tf2::Vector3 up_vector(1.0, 0.0, 0.0);
-  tf2::Vector3 right_vector = axis_vector.cross(up_vector);
-  right_vector.normalized();
-  tf2::Quaternion q(right_vector, -1.0*acos(axis_vector.dot(up_vector)));
-  q.normalize();
-  
+    tf2::Vector3 up_vector(1.0, 0.0, 0.0);
+    tf2::Vector3 right_vector = axis_vector.cross(up_vector);
+    right_vector.normalized();
+    tf2::Quaternion q_pre(right_vector, -1.0*acos(axis_vector.dot(up_vector)));
+    q_pre.normalize();
+    q = q_pre;
+  }
+  else{
+    //@ handle with 2D
+    double yaw = atan2(vy, vx);
+    tf2::Quaternion q_pre;
+    q_pre.setRPY(0.0, 0.0, yaw);
+    q = q_pre;
+  }
+
   tf2::Transform tf2_prune_pointing_pose;
   //@Transform last pose to tf2 type
   //tf2::Quaternion(q.getX(), q.getY(), q.getZ(), q.getW())

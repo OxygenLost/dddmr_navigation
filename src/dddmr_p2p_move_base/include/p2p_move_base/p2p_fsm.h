@@ -45,6 +45,8 @@
 
 #include <map>
 
+#include <std_msgs/msg/string.hpp>
+
 namespace p2p_move_base
 {
 

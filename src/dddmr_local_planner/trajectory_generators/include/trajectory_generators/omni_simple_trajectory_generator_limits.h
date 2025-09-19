@@ -29,22 +29,27 @@
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef _DD_SIMPLE_TRAJECTORY_GENERATOR_LIMITS_H__
-#define _DD_SIMPLE_TRAJECTORY_GENERATOR_LIMITS_H__
+#ifndef _ONNI_SIMPLE_TRAJECTORY_GENERATOR_LIMITS_H__
+#define _OMNI_SIMPLE_TRAJECTORY_GENERATOR_LIMITS_H__
 
 #include <Eigen/Core>
 
 namespace trajectory_generators
 {
-class DDTrajectoryGeneratorLimits
+class OmniTrajectoryGeneratorLimits
 {
 public:
 
   double max_vel_x;
   double min_vel_x;
+  double max_vel_y;
+  double min_vel_y;
+  double max_vel_trans;
+  double min_vel_trans;
   double max_vel_theta;
   double min_vel_theta;
   double acc_lim_x;
+  double acc_lim_y;
   double acc_lim_theta;
   double deceleration_ratio;
 
@@ -59,14 +64,19 @@ public:
   double prune_forward;
   double prune_backward;
 
-  DDTrajectoryGeneratorLimits() {}
+  OmniTrajectoryGeneratorLimits() {}
 
-  DDTrajectoryGeneratorLimits(
+  OmniTrajectoryGeneratorLimits(
       double nmax_vel_x,
       double nmin_vel_x,
+      double nmax_vel_y,
+      double nmin_vel_y,
+      double nmax_vel_trans,
+      double nmin_vel_trans,
       double nmax_vel_theta,
       double nmin_vel_theta,
       double nacc_lim_x,
+      double nacc_lim_y,
       double nacc_lim_theta,
       double nuse_motor_constraint,
       double nmax_motor_shaft_rpm,
@@ -78,9 +88,14 @@ public:
       double ndeceleration_ratio):
         max_vel_x(nmax_vel_x),
         min_vel_x(nmin_vel_x),
+        max_vel_y(nmax_vel_y),
+        min_vel_y(nmin_vel_y),
+        max_vel_trans(nmax_vel_trans),
+        min_vel_trans(nmin_vel_trans),
         max_vel_theta(nmax_vel_theta),
         min_vel_theta(nmin_vel_theta),
         acc_lim_x(nacc_lim_x),
+        acc_lim_y(nacc_lim_y),
         acc_lim_theta(nacc_lim_theta),
         use_motor_constraint(nuse_motor_constraint),
         max_motor_shaft_rpm(nmax_motor_shaft_rpm),
@@ -93,7 +108,7 @@ public:
 
 {}
 
-  ~DDTrajectoryGeneratorLimits() {}
+  ~OmniTrajectoryGeneratorLimits() {}
 
   /**
    * @brief  Get the acceleration limits of the robot
@@ -102,6 +117,7 @@ public:
   Eigen::Vector3f getAccLimits() {
     Eigen::Vector3f acc_limits;
     acc_limits[0] = acc_lim_x;
+    acc_limits[1] = acc_lim_y;
     acc_limits[2] = acc_lim_theta;
     return acc_limits;
   }
@@ -109,4 +125,4 @@ public:
 };
 
 }
-#endif // _DD_SIMPLE_TRAJECTORY_GENERATOR_LIMITS_H__
+#endif // _OMNI_SIMPLE_TRAJECTORY_GENERATOR_LIMITS_H__
