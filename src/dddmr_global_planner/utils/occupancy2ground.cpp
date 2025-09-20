@@ -76,15 +76,18 @@ class Occupancy2Ground : public rclcpp::Node
     PGMImage_t pgm_t_;
 
     pcl::PointCloud<pcl::PointXYZI>::Ptr pc_ground_;
-    pcl::PointCloud<pcl::PointXYZI> pc_wall_;
+    pcl::PointCloud<pcl::PointXYZI> pc_wall_, pc_wall_flat_;
 
+    double inflation_radius_;
+    std::map<std::pair<int, int>, size_t> twoD2oneD_;
+    std::vector<std::pair<int, int>> obstacles_;
 };
 
 
 Occupancy2Ground::Occupancy2Ground():Node("occupancy2ground"){
 
   pc_ground_.reset(new pcl::PointCloud<pcl::PointXYZI>());
-
+  
   pub_ground_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("mapground",
               rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable());
 
@@ -94,6 +97,10 @@ Occupancy2Ground::Occupancy2Ground():Node("occupancy2ground"){
   this->declare_parameter("map_dir", rclcpp::ParameterValue(""));
   this->get_parameter("map_dir", map_dir_);
   RCLCPP_INFO(this->get_logger(), "map_dir: %s" , map_dir_.c_str());
+
+  this->declare_parameter("inflation_radius", rclcpp::ParameterValue(1.0));
+  this->get_parameter("inflation_radius", inflation_radius_);
+  RCLCPP_INFO(this->get_logger(), "inflation_radius: %.2f" , inflation_radius_);
 
   if(!std::filesystem::exists(map_dir_))
   {
@@ -107,30 +114,68 @@ Occupancy2Ground::Occupancy2Ground():Node("occupancy2ground"){
 }
 
 void Occupancy2Ground::img2Ground() {
+
+  pc_ground_->points.resize(pgm_t_.pixelData.size());
+  
   for (size_t i = 0; i < pgm_t_.pixelData.size(); ++i) {
     if(pgm_t_.pixelData[i]>200){
       pcl::PointXYZI pt;
       pt.x = (i%pgm_t_.width)*0.05;
       pt.y = pgm_t_.height*0.05 - (int)(i/pgm_t_.width)*0.05;
       pt.z = 0.0;
-      pc_ground_->push_back(pt);
+      pc_ground_->points[i] = pt;
+      twoD2oneD_[std::make_pair(i%pgm_t_.width, (int)(i/pgm_t_.width))] = i;
     }
     else{
+      //@ create vertical structure
       for(int j=0;j<5;j++){
         pcl::PointXYZI pt;
         pt.x = (i%pgm_t_.width)*0.05;
         pt.y = pgm_t_.height*0.05 - (int)(i/pgm_t_.width)*0.05;
         pt.z = j*0.2;
         pc_wall_.push_back(pt);
+        if(j==0)
+          pc_wall_flat_.push_back(pt);
+      }
+      pcl::PointXYZI pt;
+      pt.x = (i%pgm_t_.width)*0.05;
+      pt.y = pgm_t_.height*0.05 - (int)(i/pgm_t_.width)*0.05;
+      pt.z = 0.0;
+      pt.intensity = 1000;
+      pc_ground_->points[i] = pt;
+      twoD2oneD_[std::make_pair(i%pgm_t_.width, (int)(i/pgm_t_.width))] = i;
+      obstacles_.push_back(std::make_pair(i%pgm_t_.width, (int)(i/pgm_t_.width)));
+    }
+  }
+  
+  for(auto it=obstacles_.begin(); it!=obstacles_.end();it++){
+
+    int sx = (*it).first;
+    int sy = (*it).second;
+    int step = inflation_radius_/0.05;
+    for(int dx = -step; dx<=step; dx++){
+      for(int dy = -step; dy<=step; dy++){
+        if(dx==0 && dy==0)
+          continue;
+        double d = 1/hypot(dx, dy);
+        if (twoD2oneD_.find(std::make_pair(sx+dx,sy+dy)) != twoD2oneD_.end()) {
+          size_t i = twoD2oneD_[std::make_pair(sx+dx,sy+dy)];
+          if(pc_ground_->points[i].intensity < d)
+            pc_ground_->points[i].intensity = d;
+        } else {
+          // Key does not exist
+        }
+
       }
     }
   }
+
 
   pcl::VoxelGrid<pcl::PointXYZI> sor;
   sor.setInputCloud (pc_ground_);
   sor.setLeafSize (0.1f, 0.1f, 0.1f);
   sor.filter (*pc_ground_);
-
+  
   sensor_msgs::msg::PointCloud2 ros_msg_map_ground;
   pcl::toROSMsg(*pc_ground_, ros_msg_map_ground);
   ros_msg_map_ground.header.frame_id = "map";

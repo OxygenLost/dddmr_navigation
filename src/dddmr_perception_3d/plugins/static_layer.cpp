@@ -95,7 +95,11 @@ void StaticLayer::onInitialize()
   node_->declare_parameter(name_ + ".mapping_mode", rclcpp::ParameterValue(false));
   node_->get_parameter(name_ + ".mapping_mode", mapping_mode_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "mapping_mode: %d", mapping_mode_);     
-
+  
+  node_->declare_parameter(name_ + ".enable_edge_detection", rclcpp::ParameterValue(true));
+  node_->get_parameter(name_ + ".enable_edge_detection", enable_edge_detection_);
+  RCLCPP_INFO(node_->get_logger().get_child(name_), "enable_edge_detection: %d", enable_edge_detection_);     
+  
   shared_data_->mapping_mode_ = mapping_mode_;
   
   pub_dGraph_ = node_->create_publisher<sensor_msgs::msg::PointCloud2>(name_ + "/dGraph", 2);
@@ -203,7 +207,7 @@ void StaticLayer::selfClear(){
 
     //@ radius search connection to generate sGraph
     resetdGraph();
-    if(!is_local_planner_ && !mapping_mode_)
+    if(!is_local_planner_ && !mapping_mode_ && enable_edge_detection_)
       radiusSearchConnection();
     
     shared_data_->is_static_layer_ready_ = true;

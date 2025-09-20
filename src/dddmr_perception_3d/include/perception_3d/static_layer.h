@@ -114,6 +114,7 @@ class StaticLayer: public Sensor{
     std::string map_topic_;
     std::string ground_topic_;
     bool is_ground_and_map_being_initialized_once_;
+    bool enable_edge_detection_;
 };
 
 }//end of name space
