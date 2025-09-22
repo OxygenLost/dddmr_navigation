@@ -159,6 +159,8 @@ class MultiLayerSpinningLidar: public Sensor{
     int euclidean_cluster_extraction_min_cluster_size_;
     double euclidean_cluster_extraction_tolerance_;
     int stitcher_num_;
+    double pub_gbl_marking_frequency_;
+    
     /*pub and sub*/
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sensor_sub_;
     

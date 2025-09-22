@@ -141,6 +141,10 @@ void MultiLayerSpinningLidar::onInitialize()
   node_->get_parameter(name_ + ".stitcher_num", stitcher_num_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "stitcher_num: %d", stitcher_num_);  
   
+  node_->declare_parameter(name_ + ".pub_gbl_marking_frequency", rclcpp::ParameterValue(1.0));
+  node_->get_parameter(name_ + ".pub_gbl_marking_frequency", pub_gbl_marking_frequency_);
+  RCLCPP_INFO(node_->get_logger().get_child(name_), "pub_gbl_marking_frequency: %.1f", pub_gbl_marking_frequency_);  
+  
   sensor_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   rclcpp::SubscriptionOptions sub_options;
   sub_options.callback_group = sensor_cb_group_;
@@ -165,8 +169,8 @@ void MultiLayerSpinningLidar::onInitialize()
   get_first_tf_ = false;
   
   marking_pub_cb_group_ = node_->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
-  auto loop_time = std::chrono::seconds(1);
-  marking_pub_timer_ = node_->create_wall_timer(loop_time, std::bind(&MultiLayerSpinningLidar::pubUpdateLoop, this), marking_pub_cb_group_);
+  auto publish_time = std::chrono::milliseconds(int(1000/pub_gbl_marking_frequency_));
+  marking_pub_timer_ = node_->create_wall_timer(publish_time, std::bind(&MultiLayerSpinningLidar::pubUpdateLoop, this), marking_pub_cb_group_);
 
 }
 

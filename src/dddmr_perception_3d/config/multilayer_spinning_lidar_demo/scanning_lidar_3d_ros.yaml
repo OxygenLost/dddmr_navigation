@@ -22,6 +22,7 @@ perception_3d:
       plugin: "perception_3d::MultiLayerSpinningLidar"
       topic: "unilidar/cloud"
       pub_gbl_marking_for_visualization: true
+      pub_gbl_marking_frequency: 10.0
       vertical_FOV_top: 90.0
       vertical_FOV_bottom: -0.0
       scan_effective_positive_start: 0.0

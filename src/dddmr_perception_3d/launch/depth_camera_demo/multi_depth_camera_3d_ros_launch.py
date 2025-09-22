@@ -7,6 +7,10 @@ from launch.actions import ExecuteProcess
 from launch.actions import TimerAction
 
 def generate_launch_description():
+
+  package_dir = get_package_share_directory('perception_3d')
+  map_dir = os.path.join(package_dir, 'map')
+
   map2baselink = Node(
           package="tf2_ros",
           executable="static_transform_publisher",
@@ -81,8 +85,8 @@ def generate_launch_description():
               {"ground_rotate_around_x": 1.570796327},
               {"map_down_sample": 0.5},
               {"ground_down_sample": 0.5},
-              {"map_dir": '/root/dddmr_navigation/src/dddmr_perception_3d/map/map.pcd'},
-              {"ground_dir": '/root/dddmr_navigation/src/dddmr_perception_3d/map/ground.pcd'},
+              {"map_dir": map_dir + '/map.pcd'},
+              {"ground_dir": map_dir + '/ground.pcd'},
           ]
   )  
   
