@@ -92,13 +92,18 @@ void StaticLayer::onInitialize()
   node_->get_parameter(name_ + ".ground_topic", ground_topic_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "ground_topic: %s", ground_topic_.c_str());     
 
-  node_->declare_parameter(name_ + ".mapping_mode", rclcpp::ParameterValue(false));
-  node_->get_parameter(name_ + ".mapping_mode", mapping_mode_);
+  node_->declare_parameter(name_ + ".support.mapping_mode", rclcpp::ParameterValue(false));
+  node_->get_parameter(name_ + ".support.mapping_mode", mapping_mode_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "mapping_mode: %d", mapping_mode_);     
   
-  node_->declare_parameter(name_ + ".enable_edge_detection", rclcpp::ParameterValue(true));
-  node_->get_parameter(name_ + ".enable_edge_detection", enable_edge_detection_);
+  node_->declare_parameter(name_ + ".support.enable_edge_detection", rclcpp::ParameterValue(true));
+  node_->get_parameter(name_ + ".support.enable_edge_detection", enable_edge_detection_);
   RCLCPP_INFO(node_->get_logger().get_child(name_), "enable_edge_detection: %d", enable_edge_detection_);     
+
+  node_->declare_parameter(name_ + ".support.generate_static_graph", rclcpp::ParameterValue(false));
+  node_->get_parameter(name_ + ".support.generate_static_graph", generate_static_graph_);
+  RCLCPP_INFO(node_->get_logger().get_child(name_), "generate_static_graph: %d", generate_static_graph_);     
+
   
   shared_data_->mapping_mode_ = mapping_mode_;
   
@@ -209,7 +214,12 @@ void StaticLayer::selfClear(){
     resetdGraph();
     if(!is_local_planner_ && !mapping_mode_ && enable_edge_detection_)
       radiusSearchConnection();
-    
+
+    if(!is_local_planner_ && generate_static_graph_){
+      generateStaticGraph();
+      RCLCPP_INFO(node_->get_logger().get_child(name_), "Static graph is generated with graph size: %lu", shared_data_->sGraph_ptr_->getSize());
+    }
+      
     shared_data_->is_static_layer_ready_ = true;
     is_ground_and_map_being_initialized_once_ = true;
   }
@@ -220,6 +230,59 @@ void StaticLayer::selfClear(){
 
 }
 
+void StaticLayer::generateStaticGraph(){
+  unsigned int index_cnt = 0;
+  for(auto it = pcl_ground_->points.begin();it!=pcl_ground_->points.end();it++){
+    pcl::PointXYZI pcl_node;
+    pcl_node = (*it);
+
+    //@Kd-tree to find nn point for planar equation
+    std::vector<int> pointIdxRadiusSearch;
+    std::vector<float> pointRadiusSquaredDistance;
+    if(!use_adaptive_connection_){
+      shared_data_->kdtree_ground_->radiusSearch (pcl_node, radius_of_ground_connection_, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+    }
+    else{
+
+      int hard_interrupt_cnt = 100;
+      float search_r = 0.5;
+      int search_cnt = 1;
+      pointIdxRadiusSearch.clear();
+      pointRadiusSquaredDistance.clear();
+      shared_data_->kdtree_ground_->radiusSearch (pcl_node, search_r + 0.2*search_cnt, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+
+      while(pointIdxRadiusSearch.size()<adaptive_connection_number_ && hard_interrupt_cnt>0){
+        search_cnt++;
+        pointIdxRadiusSearch.clear();
+        pointRadiusSquaredDistance.clear();
+        shared_data_->kdtree_ground_->radiusSearch (pcl_node, search_r + 0.2*search_cnt, pointIdxRadiusSearch, pointRadiusSquaredDistance);    
+        hard_interrupt_cnt--;   
+      }
+    }
+    
+    for(auto it = pointIdxRadiusSearch.begin(); it!=pointIdxRadiusSearch.end();it++){
+      //chekc relative z value for the edge, because we need to eliminate stair and wheel chair passage issue
+      edge_t a_edge;
+      auto node = index_cnt;
+      a_edge.first = (*it);
+      //@Create an edge
+      double distance_between_pair = sqrt(pcl::geometry::squaredDistance(pcl_ground_->points[node], pcl_ground_->points[a_edge.first]));
+      a_edge.second = distance_between_pair;
+      shared_data_->sGraph_ptr_->insertNode(node, a_edge);
+
+    }
+
+    //@ use map to impose weight on each node
+    pointIdxRadiusSearch.clear();
+    pointRadiusSquaredDistance.clear();
+    if(shared_data_->kdtree_map_->nearestKSearch(pcl_node, 1, pointIdxRadiusSearch, pointRadiusSquaredDistance)>0){
+      double distance_to_obstacle = sqrt(pointRadiusSquaredDistance[0]);
+      if(distance_to_obstacle < gbl_utils_->getInscribedRadius())
+        dGraph_.setValue(index_cnt, distance_to_obstacle);
+    }
+    index_cnt++;
+  }
+}
 void StaticLayer::radiusSearchConnection(){
   unsigned int index_cnt = 0;
   for(auto it = pcl_ground_->points.begin();it!=pcl_ground_->points.end();it++){

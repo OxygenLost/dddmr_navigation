@@ -115,7 +115,7 @@ Visualization Manager:
       Channel Name: intensity
       Class: rviz_default_plugins/PointCloud2
       Color: 0; 255; 255
-      Color Transformer: FlatColor
+      Color Transformer: Intensity
       Decay Time: 0
       Enabled: false
       Invert Rainbow: false
@@ -137,12 +137,12 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /map/dGraph
       Use Fixed Frame: true
-      Use rainbow: true
+      Use rainbow: false
       Value: false
     - Alpha: 1
       Buffer Length: 1
       Class: rviz_default_plugins/Path
-      Color: 255; 255; 0
+      Color: 0; 0; 0
       Enabled: true
       Head Diameter: 0.30000001192092896
       Head Length: 0.20000000298023224
@@ -213,16 +213,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/XYOrbit
-      Distance: 20.13191795349121
+      Distance: 21.252532958984375
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 2.6511573791503906
-        Y: 9.7274169921875
-        Z: 7.136604108382016e-05
+        X: 2.1097335815429688
+        Y: 9.232039451599121
+        Z: 7.375022687483579e-05
       Focal Shape Fixed Size: false
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
@@ -231,7 +231,7 @@ Visualization Manager:
       Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: XYOrbit (rviz_default_plugins)
-      Yaw: 3.1435890197753906
+      Yaw: 3.1435837745666504
     Saved: ~
 Window Geometry:
   Displays:

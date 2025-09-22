@@ -60,6 +60,7 @@ include_directories(
 # a_star_on_graph
 add_library(a_star_on_graph SHARED
   src/a_star_on_pc.cpp
+  src/a_star_on_pre_graph.cpp
 )
 target_link_libraries(a_star_on_graph
   ${PCL_LIBRARIES}

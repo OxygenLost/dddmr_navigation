@@ -173,7 +173,7 @@ void Occupancy2Ground::img2Ground() {
 
   pcl::VoxelGrid<pcl::PointXYZI> sor;
   sor.setInputCloud (pc_ground_);
-  sor.setLeafSize (0.1f, 0.1f, 0.1f);
+  sor.setLeafSize (0.05f, 0.05f, 0.05f);
   sor.filter (*pc_ground_);
   
   sensor_msgs::msg::PointCloud2 ros_msg_map_ground;

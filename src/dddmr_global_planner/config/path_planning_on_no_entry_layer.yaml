@@ -17,9 +17,16 @@ perception_3d_global:
       intensity_search_radius: 1.0 #this value is suggested to be 1.0 meters, because if it is too large, the narrow passage will be miscalculated
       intensity_search_punish_weight: 0.1 #the weight for a node. Set this value higher means we dont like path planning cross a orphan node.
       static_imposing_radius: 1.0
-      mapping_mode: false
       map_topic: "mapcloud"
       ground_topic: "mapground"
+      support:
+        mapping_mode: false
+          #if mapping mode is true, edge detection is automatically disabled
+        enable_edge_detection: true
+        generate_static_graph: false
+          #the connection radius will be used
+          #enable this value when using super dense ground say ground voxel size<=10 cm
+
 
     no_entry_layer:
       plugin: "perception_3d::NoEntryLayer"
@@ -29,3 +36,4 @@ perception_3d_global:
 global_planner:
   ros__parameters:
     turning_weight: 0.1 #Punish the zig-zag path
+    a_star_expanding_radius: 0.5

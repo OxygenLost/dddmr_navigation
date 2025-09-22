@@ -97,6 +97,11 @@ void GlobalPlanner::initial(const std::shared_ptr<perception_3d::Perception3D_RO
   this->get_parameter("a_star_expanding_radius", a_star_expanding_radius_);
   RCLCPP_INFO(this->get_logger(), "a_star_expanding_radius: %.2f", a_star_expanding_radius_);    
 
+  declare_parameter("use_pre_graph", rclcpp::ParameterValue(false));
+  this->get_parameter("use_pre_graph", use_pre_graph_);
+  RCLCPP_INFO(this->get_logger(), "use_pre_graph: %d", use_pre_graph_);    
+
+
   tf_listener_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   action_server_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   //@Initialize transform listener and broadcaster
@@ -140,6 +145,7 @@ GlobalPlanner::~GlobalPlanner(){
   tf2Buffer_.reset();
   tfl_.reset();
   a_star_planner_.reset();
+  a_star_planner_pre_graph_.reset();
   action_server_global_planner_.reset();
   kdtree_ground_.reset();
   kdtree_map_.reset();
@@ -171,6 +177,11 @@ void GlobalPlanner::checkPerception3DThread(){
 
 void GlobalPlanner::cbClickedPoint(const geometry_msgs::msg::PointStamped::SharedPtr clicked_goal){
   
+  if(!perception_3d_ros_->getSharedDataPtr()->is_static_layer_ready_){
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Received clicked goal before static layer is ready");
+    return;
+  }
+
   geometry_msgs::msg::PoseStamped start, goal;
 
   goal.pose.position.x = clicked_goal->point.x;
@@ -200,7 +211,10 @@ void GlobalPlanner::cbClickedPoint(const geometry_msgs::msg::PointStamped::Share
   nav_msgs::msg::Path ros_path;
 
   if(getStartGoalID(start, goal, start_id, goal_id)){
-    a_star_planner_->getPath(start_id, goal_id, path);    
+    if(!use_pre_graph_)
+      a_star_planner_->getPath(start_id, goal_id, path);
+    else
+      a_star_planner_pre_graph_->getPath(start_id, goal_id, path);
   }
 
 
@@ -464,7 +478,7 @@ void GlobalPlanner::makePlan(const std::shared_ptr<rclcpp_action::ServerGoalHand
   const auto goal = goal_handle->get_goal();
 
   if(!perception_3d_ros_->getSharedDataPtr()->is_static_layer_ready_){
-    RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Waiting for static layer");
+    RCLCPP_INFO_THROTTLE(this->get_logger(), *clock_, 1000, "Received the request before static layer is ready");
     auto result = std::make_shared<dddmr_sys_core::action::GetPlan::Result>();
     goal_handle->abort(result);
     return;
@@ -505,7 +519,10 @@ nav_msgs::msg::Path GlobalPlanner::makeROSPlan(const geometry_msgs::msg::PoseSta
   nav_msgs::msg::Path ros_path;
 
   if(getStartGoalID(start, goal, start_id, goal_id)){
-    a_star_planner_->getPath(start_id, goal_id, path);    
+    if(!use_pre_graph_)
+      a_star_planner_->getPath(start_id, goal_id, path);
+    else
+      a_star_planner_pre_graph_->getPath(start_id, goal_id, path);  
   }
 
   if(path.empty()){
@@ -544,8 +561,14 @@ void GlobalPlanner::getStaticGraphFromPerception3D(){
     if(a_star_expanding_radius_ >= perception_3d_ros_->getGlobalUtils()->getInscribedRadius()*2){
       RCLCPP_WARN(this->get_logger(), "Expanding radius is much larger than InscribedRadius, the planning time will be increased.");
     }
-    a_star_planner_ = std::make_shared<A_Star_on_Graph>(pcl_ground_, perception_3d_ros_, a_star_expanding_radius_);
-    a_star_planner_->setupTurningWeight(turning_weight_);
+    if(!use_pre_graph_){
+      a_star_planner_ = std::make_shared<A_Star_on_Graph>(pcl_ground_, perception_3d_ros_, a_star_expanding_radius_);
+      a_star_planner_->setupTurningWeight(turning_weight_);
+    }
+    else{
+      a_star_planner_pre_graph_ = std::make_shared<A_Star_on_PreGraph>(pcl_ground_, static_graph_, perception_3d_ros_, a_star_expanding_radius_);
+      a_star_planner_pre_graph_->setupTurningWeight(turning_weight_);
+    }
   }
   else{
     a_star_planner_->updateGraph(pcl_ground_);

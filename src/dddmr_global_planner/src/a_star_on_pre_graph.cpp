@@ -28,41 +28,41 @@
 * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#include <global_planner/a_star_on_graph.h>
+#include <global_planner/a_star_on_pre_graph.h>
 
-AstarList::AstarList(perception_3d::StaticGraph& static_graph){
+AstarListPreGraph::AstarListPreGraph(perception_3d::StaticGraph& static_graph){
   static_graph_ = static_graph;
 }
 
-void AstarList::setGraph(perception_3d::StaticGraph& static_graph){
+void AstarListPreGraph::setGraph(perception_3d::StaticGraph& static_graph){
   static_graph_ = static_graph;
 }
 
-void AstarList::Initial(){
+void AstarListPreGraph::Initial(){
   as_list_.clear();
   graph_t* tmp_graph_t; //std::unordered_map<unsigned int, std::set<edge_t>> typedef in static_graph.h
   tmp_graph_t = static_graph_.getGraphPtr();
   for(auto it=(*tmp_graph_t).begin();it!=(*tmp_graph_t).end();it++){
-    Node_t new_node = {.self_index=0, .g=0, .h=0, .f=0, .parent_index=0, .is_closed=false, .is_opened=false};
+    NodePreGraph_t new_node = {.self_index=0, .g=0, .h=0, .f=0, .parent_index=0, .is_closed=false, .is_opened=false};
     as_list_[(*it).first] = new_node;
   }
   f_priority_set_.clear();
 }
 
-Node_t AstarList::getNode(unsigned int node_index){
+NodePreGraph_t AstarListPreGraph::getNode(unsigned int node_index){
 
   return as_list_[node_index];
 }
 
-float AstarList::getGVal(Node_t& a_node){
+float AstarListPreGraph::getGVal(NodePreGraph_t& a_node){
   return as_list_[a_node.self_index].g;
 }
 
-void AstarList::closeNode(Node_t& a_node){
+void AstarListPreGraph::closeNode(NodePreGraph_t& a_node){
   as_list_[a_node.self_index].is_closed = true;
 }
 
-void AstarList::updateNode(Node_t& a_node){
+void AstarListPreGraph::updateNode(NodePreGraph_t& a_node){
   as_list_[a_node.self_index] = a_node;
   f_p_ afp;
   afp.first = a_node.f; //made minimum f to be top so we can pop it
@@ -71,9 +71,9 @@ void AstarList::updateNode(Node_t& a_node){
   //ROS_DEBUG("Add node ---> %u with g: %f, h: %f, f: %f",a_node.self_index, a_node.g, a_node.h, a_node.f);
 }
 
-Node_t AstarList::getNode_wi_MinimumF(){
+NodePreGraph_t AstarListPreGraph::getNode_wi_MinimumF(){
   auto first_it = f_priority_set_.begin();
-  Node_t m_node = as_list_[(*first_it).second];
+  NodePreGraph_t m_node = as_list_[(*first_it).second];
   if(!m_node.is_closed){
     f_priority_set_.erase(first_it);
     return m_node;
@@ -91,36 +91,37 @@ Node_t AstarList::getNode_wi_MinimumF(){
   return m_node;
 }
 
-bool AstarList::isClosed(unsigned int node_index){
+bool AstarListPreGraph::isClosed(unsigned int node_index){
   return as_list_[node_index].is_closed;
 }
 
-bool AstarList::isOpened(unsigned int node_index){
+bool AstarListPreGraph::isOpened(unsigned int node_index){
   return as_list_[node_index].is_opened;
 }
 
-bool AstarList::isFrontierEmpty(){
+bool AstarListPreGraph::isFrontierEmpty(){
   return f_priority_set_.empty();
 }
 
 //@----------------------------------------------------------------------------------------
 
-A_Star_on_Graph::A_Star_on_Graph(pcl::PointCloud<pcl::PointXYZ>::Ptr pc_original_z_up, 
+A_Star_on_PreGraph::A_Star_on_PreGraph(pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up, 
                                   perception_3d::StaticGraph& static_graph, 
-                                  std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros){
+                                  std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros,
+                                  double a_star_expanding_radius){
   static_graph_ = static_graph;
   perception_ros_ = perception_ros;
-
+  a_star_expanding_radius_ = a_star_expanding_radius;
   pc_original_z_up_ = pc_original_z_up;
-  ASLS_ = new AstarList(static_graph_);
+  ASLS_ = new AstarListPreGraph(static_graph_);
 }
 
-A_Star_on_Graph::~A_Star_on_Graph(){
+A_Star_on_PreGraph::~A_Star_on_PreGraph(){
   if(ASLS_)
     delete ASLS_;
 }
 
-void A_Star_on_Graph::updateGraph(pcl::PointCloud<pcl::PointXYZ>::Ptr pc_original_z_up, 
+void A_Star_on_PreGraph::updateGraph(pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up, 
                                   perception_3d::StaticGraph& static_graph){
   
   
@@ -129,7 +130,7 @@ void A_Star_on_Graph::updateGraph(pcl::PointCloud<pcl::PointXYZ>::Ptr pc_origina
   ASLS_->setGraph(static_graph_);
 }
 
-double A_Star_on_Graph::getThetaFromParent2Expanding(pcl::PointXYZ m_pcl_current_parent, pcl::PointXYZ m_pcl_current, pcl::PointXYZ m_pcl_expanding){
+double A_Star_on_PreGraph::getThetaFromParent2Expanding(pcl::PointXYZI m_pcl_current_parent, pcl::PointXYZI m_pcl_current, pcl::PointXYZI m_pcl_expanding){
   //@ calculate vector: parent -> current
   float vx1, vy1;
   vx1 = m_pcl_current.x - m_pcl_current_parent.x;
@@ -155,7 +156,39 @@ double A_Star_on_Graph::getThetaFromParent2Expanding(pcl::PointXYZ m_pcl_current
   return theta_of_vector;
 }
 
-void A_Star_on_Graph::getPath(
+bool A_Star_on_PreGraph::isLineOfSightClear(pcl::PointXYZI& pcl_current, pcl::PointXYZI& pcl_expanding, double inscribed_radius){
+
+  //@ generate line equation
+  float dX =
+      pcl_expanding.x - pcl_current.x;
+  float dY =
+      pcl_expanding.y - pcl_current.y;
+  float dZ =
+      pcl_expanding.z - pcl_current.z;
+  
+  float distance = sqrt(dX*dX + dY*dY + dZ*dZ);
+  distance = distance/inscribed_radius; //sample by every inscribed radius
+  float dt = 1/distance;
+  for(float t=0; t<=1.0+dt; t+=dt){
+    float r = t;
+    if(t>=1.0) //@ make sure we examine t=1.0
+      r = 1.0;
+    pcl::PointXYZI a_pt;
+    a_pt.intensity = 0.0;
+    a_pt.x = pcl_current.x + dX*r;
+    a_pt.y = pcl_current.y + dY*r;
+    a_pt.z = pcl_current.z + dZ*r;
+    std::vector<int> pidx;
+    std::vector<float> prsd;
+    kdtree_lethal_->radiusSearch(a_pt, 2*inscribed_radius, pidx, prsd);
+    if(pidx.size()>1){
+      return false;
+    }
+  }
+  return true;
+}
+
+void A_Star_on_PreGraph::getPath(
   unsigned int start, unsigned int goal,
   std::vector<unsigned int>& path){
 
@@ -165,10 +198,10 @@ void A_Star_on_Graph::getPath(
   Create the first node which is start and add into frontier
   */
 
-  pcl::PointXYZ pcl_goal = pc_original_z_up_->points[goal];
-  pcl::PointXYZ pcl_start = pc_original_z_up_->points[start];
+  pcl::PointXYZI pcl_goal = pc_original_z_up_->points[goal];
+  pcl::PointXYZI pcl_start = pc_original_z_up_->points[start];
   float f = sqrt(pcl::geometry::squaredDistance(pcl_start, pcl_goal));
-  Node_t current_node = {.self_index=start, .g=0, .h=0, .f=f, .parent_index=start, .is_closed=false, .is_opened=true};
+  NodePreGraph_t current_node = {.self_index=start, .g=0, .h=0, .f=f, .parent_index=start, .is_closed=false, .is_opened=true};
 
   ASLS_->Initial();
   ASLS_->updateNode(current_node);
@@ -183,8 +216,12 @@ void A_Star_on_Graph::getPath(
     //ROS_DEBUG("Expand node: %u", current_node.self_index);
     /*Get successors*/
     auto successors = static_graph_.getEdge(current_node.self_index);
+    
     for(auto it = successors.begin(); it!=successors.end(); it++){
-
+      
+      if((*it).second>a_star_expanding_radius_){
+        continue;
+      }
       //@ dGraphValue is the distance to lethal
       double dGraphValue = perception_ros_->get_min_dGraphValue((*it).first);
 
@@ -194,19 +231,24 @@ void A_Star_on_Graph::getPath(
         continue;
       }
       
+      float current_expanding_g = (*it).second;
+
+      pcl::PointXYZI pcl_current = pc_original_z_up_->points[current_node.self_index];
+      pcl::PointXYZI pcl_current_parent = pc_original_z_up_->points[current_node.parent_index];
+      pcl::PointXYZI pcl_expanding = pc_original_z_up_->points[(*it).first];
+
       double factor = exp(-1.0 * inflation_descending_rate * (dGraphValue - inscribed_radius));
 
       //@ get current_parent, current, expanding to compute theta od expanding
-      pcl::PointXYZ pcl_current = pc_original_z_up_->points[current_node.self_index];
-      pcl::PointXYZ pcl_current_parent = pc_original_z_up_->points[current_node.parent_index];
-      pcl::PointXYZ pcl_expanding = pc_original_z_up_->points[(*it).first];
       double theta = getThetaFromParent2Expanding(pcl_current_parent, pcl_current, pcl_expanding);
 
-      float new_g = current_node.g + (*it).second * static_graph_.getNodeWeight((*it).first) + factor * 1.0 + theta*turning_weight_;
+      float new_g = current_node.g + (*it).second + factor * 1.0 + 
+                      theta*turning_weight_ + pc_original_z_up_->points[current_node.self_index].intensity;
+
       float new_h = sqrt(pcl::geometry::squaredDistance(pcl_expanding, pcl_goal));
       float new_f = new_g + new_h;
 
-      Node_t new_node = {.self_index=((*it).first), .g=new_g, .h=new_h, .f=new_f, .parent_index=current_node.self_index, .is_closed=false, .is_opened=true};
+      NodePreGraph_t new_node = {.self_index=((*it).first), .g=new_g, .h=new_h, .f=new_f, .parent_index=current_node.self_index, .is_closed=false, .is_opened=true};
 
       /*Check is in closed list*/
       if(ASLS_->isClosed((*it).first))
@@ -231,7 +273,7 @@ void A_Star_on_Graph::getPath(
     /*If goal is in closed list, we are done*/
     if(ASLS_->isClosed(goal)){
       //ROS_DEBUG("Found path");
-      Node_t trace_back = ASLS_->getNode(goal);
+      NodePreGraph_t trace_back = ASLS_->getNode(goal);
       while(trace_back.self_index!=trace_back.parent_index){
         path.push_back(trace_back.self_index);
         trace_back = ASLS_->getNode(trace_back.parent_index);

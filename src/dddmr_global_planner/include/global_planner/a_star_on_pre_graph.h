@@ -46,27 +46,28 @@ type graph_t is defined here
 
 /*For perception*/
 #include <perception_3d/perception_3d_ros.h>
+#include <global_planner/nanoflann_pcl.hpp>
 
 typedef struct {
   unsigned int self_index;
   float g, h, f;
   unsigned int parent_index; 
   bool is_closed, is_opened;
-} Node_t;
+} NodePreGraph_t;
 
 typedef std::pair<double, unsigned int> f_p_;
 
-class AstarList{
+class AstarListPreGraph{
   public:
-    AstarList(perception_3d::StaticGraph& static_graph);
+    AstarListPreGraph(perception_3d::StaticGraph& static_graph);
 
     void Initial();
     void setGraph(perception_3d::StaticGraph& static_graph);
-    void updateNode(Node_t& a_node);
-    void closeNode(Node_t& a_node);
-    float getGVal(Node_t& a_node);
-    Node_t getNode_wi_MinimumF();
-    Node_t getNode(unsigned int node_index);
+    void updateNode(NodePreGraph_t& a_node);
+    void closeNode(NodePreGraph_t& a_node);
+    float getGVal(NodePreGraph_t& a_node);
+    NodePreGraph_t getNode_wi_MinimumF();
+    NodePreGraph_t getNode(unsigned int node_index);
     bool isClosed(unsigned int node_index);
     bool isOpened(unsigned int node_index);
     bool isFrontierEmpty();
@@ -80,7 +81,7 @@ class AstarList{
     Key: node id
     content: Node
     */
-    std::unordered_map<unsigned int, Node_t> as_list_;
+    std::unordered_map<unsigned int, NodePreGraph_t> as_list_;
 
     /*
     We push back a pair <f,node_index> by the priority, hence ,the time complexity of checking minimum f is O(1)
@@ -89,34 +90,44 @@ class AstarList{
     std::set<f_p_> f_priority_set_;
 };
 
-class A_Star_on_Graph{
+class A_Star_on_PreGraph{
 
     public:
-      A_Star_on_Graph(pcl::PointCloud<pcl::PointXYZ>::Ptr pc_original_z_up, 
+      A_Star_on_PreGraph(pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up, 
         perception_3d::StaticGraph& static_graph,
-        std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros);
+        std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros, 
+        double a_star_expanding_radius);
       
-      ~A_Star_on_Graph();
+      ~A_Star_on_PreGraph();
       
-      void updateGraph(pcl::PointCloud<pcl::PointXYZ>::Ptr pc_original_z_up, 
+      void updateGraph(pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up, 
                                   perception_3d::StaticGraph& static_graph);
 
       void getPath( unsigned int start, unsigned int goal, std::vector<unsigned int>& path);
       
       void setupTurningWeight(double m_weight){turning_weight_ = m_weight;}
+      
+      bool isLineOfSightClear(pcl::PointXYZI& pcl_current, pcl::PointXYZI& pcl_expanding, double inscribed_radius);
+      
     private:
-      pcl::PointCloud<pcl::PointXYZ>::Ptr pc_original_z_up_;
+
+      //@ kd-tree for line-of-sight
+      nanoflann::KdTreeFLANN<pcl::PointXYZI>::Ptr kdtree_lethal_;
+
+      pcl::PointCloud<pcl::PointXYZI>::Ptr pc_original_z_up_;
 
       perception_3d::StaticGraph static_graph_; 
       /*Provide dynamic graph for obstacle avoidance*/
       std::shared_ptr<perception_3d::Perception3D_ROS> perception_ros_;
       
       /*Create the list*/
-      AstarList* ASLS_;
+      AstarListPreGraph* ASLS_;
 
       //@ turning weight of the node
       double turning_weight_;
 
-      double getThetaFromParent2Expanding(pcl::PointXYZ m_pcl_current_parent, pcl::PointXYZ m_pcl_current, pcl::PointXYZ m_pcl_expanding);
+      double getThetaFromParent2Expanding(pcl::PointXYZI m_pcl_current_parent, pcl::PointXYZI m_pcl_current, pcl::PointXYZI m_pcl_expanding);
+
+      double a_star_expanding_radius_;
 };
 

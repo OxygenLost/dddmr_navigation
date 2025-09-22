@@ -219,14 +219,12 @@ void A_Star_on_Graph::getPath(
   double inflation_descending_rate = perception_ros_->getGlobalUtils()->getInflationDescendingRate();
   double max_obstacle_distance = perception_ros_->getGlobalUtils()->getMaxObstacleDistance();
   
-  bool is_lethal = false;
   perception_ros_->getStackedPerception()->aggregateLethal();
   //@ generate kd-tree and handle no point cloud edge case
   kdtree_lethal_.reset(new nanoflann::KdTreeFLANN<pcl::PointXYZI>());
   
   if(perception_ros_->getSharedDataPtr()->aggregate_lethal_->points.size()>0){
     kdtree_lethal_->setInputCloud(perception_ros_->getSharedDataPtr()->aggregate_lethal_);
-    is_lethal = true;
   }
     
 
