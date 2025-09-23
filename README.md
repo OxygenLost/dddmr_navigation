@@ -13,7 +13,21 @@ We’ve just integrated a Gazebo models using Unitree-go2 with the DDDMR Navigat
 
 ---
 
-👉 DDDMR Navigation Stack is designed to solve the issues that [Nav2](https://github.com/ros-navigation/navigation2) not able to handle: such as multi-layer floor mapping and localization, path planning in stereo structures and percption markings and clearings in a 3D point cloud map.
+## 🚀 We have released robosense airy example
+<table align='center'>
+  <tr width="100%">
+    <td width="40%"><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/airy_configuration.png" width="400" height="260"/><p align='center'>Airy as the belly button!?</p></td>
+    <td width="40%"><img src="https://github.com/dfl-rlab/dddmr_documentation_materials/blob/main/dddmr_lego_loam_bor/robosense_airy_dddmr_lego_loam.gif" width="400" height="260"/><p align='center'>DDDMR SLAM</p></td>
+  </tr>
+</table>
+
+[👾 Let's play airy using dddmr navigation](https://github.com/dfl-rlab/dddmr_navigation/tree/main/src/dddmr_lego_loam)
+
+
+---
+
+> [!NOTE]
+> DDDMR Navigation Stack is designed to solve the issues that [Nav2](https://github.com/ros-navigation/navigation2) not able to handle: such as multi-layer floor mapping and localization, path planning in stereo structures and percption markings and clearings in a 3D point cloud map.
 
 <table align='center'>
   <tr width="100%">
