@@ -30,7 +30,7 @@ find_package(Qt5 REQUIRED COMPONENTS Widgets Test)
 
 find_package(geometry_msgs REQUIRED)
 
-find_package(ignition-math6 REQUIRED)
+# find_package(ignition-math6 REQUIRED)  # Not needed for ROS2 Jazzy
 
 find_package(image_transport REQUIRED)
 find_package(interactive_markers REQUIRED)
@@ -109,9 +109,9 @@ target_link_libraries(dddmr_rviz_default_plugins PUBLIC
   ${PCL_LIBRARIES}
 )
 
-target_link_libraries(dddmr_rviz_default_plugins PRIVATE
-  ignition-math6
-)
+# target_link_libraries(dddmr_rviz_default_plugins PRIVATE
+#   ignition-math6
+# )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.

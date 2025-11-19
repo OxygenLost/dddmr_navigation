@@ -26,6 +26,7 @@ find_package(rviz_rendering REQUIRED)
 find_package(rviz_common REQUIRED)
 
 find_package(sensor_msgs REQUIRED)
+find_package(MPI REQUIRED)
 find_package(pcl_conversions REQUIRED)
 
 find_package(PCL REQUIRED COMPONENTS filters common io)
